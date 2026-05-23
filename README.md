@@ -14,18 +14,21 @@ I2P, which stands for "Invisible Internet Project," is an anonymous network laye
 
 ## Installation:
 
-    $ git clone https://github.com/umutcamliyurt/I2P-Browser.git
-    $ cd I2P-Browser/
-    $ sudo apt-get install python3-pyqt5.qtwebengine
-    $ pip3 install -r requirements.txt
-    $ python3 Browser.py
+     git clone https://github.com/umutcamliyurt/I2P-Browser.git
+     cd I2P-Browser/
+     #MacOS:
+     brew install python3-pyqt5.qtwebengine
+     #Linux
+     sudo apt-get install python3-pyqt5.qtwebengine
+     pip3 install -r requirements.txt
+     python3 Browser.py
 
 ## Usage:
 Step 1: Start I2P router in the background
 
 Step 2:
 
-    $ python3 Browser.py
+     python3 Browser.py
 
 ## Requirements:
 
@@ -33,22 +36,6 @@ Step 2:
 
 - Python >=3.9
 
-
-### Screenshots:
-
-![screenshot](screenshots/screenshot.png)
-
-![screenshot](screenshots/screenshot2.png)
-
-### I2P Browser vs. Tor Browser Fingerprinting Results:
-
-Below are the results of our privacy comparison between I2P browser and Tor browser:
-
-![I2P Browser](screenshots/eff_results_i2p.png)
-*Image 1: Results from the I2P browser.*
-
-![Tor Browser](screenshots/eff_results_tor.png)
-*Image 2: Results from the Tor browser.*
 
 
 
