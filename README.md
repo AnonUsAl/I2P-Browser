@@ -16,6 +16,9 @@ I2P, which stands for "Invisible Internet Project," is an anonymous network laye
 
      git clone https://github.com/umutcamliyurt/I2P-Browser.git
      cd I2P-Browser/
+     #MacOS:
+     brew install python3-pyqt5.qtwebengine
+     #Linux
      sudo apt-get install python3-pyqt5.qtwebengine
      pip3 install -r requirements.txt
      python3 Browser.py
