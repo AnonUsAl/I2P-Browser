@@ -1,6 +1,6 @@
 # I2P Browser
 
-A lightweight PyQt browser for accessing I2P sites with privacy-focused defaults.
+A lightweight PySide6 browser for accessing I2P sites with privacy-focused defaults.
 
 ## Description
 
@@ -15,6 +15,7 @@ I2P, the Invisible Internet Project, is an anonymous network layer for private c
 - Optional Tor SOCKS5 proxy mode is available at `127.0.0.1:9050`.
 - I2P and Tor proxy modes are mutually exclusive.
 - The interface supports English, Simplified Chinese, and Traditional Chinese.
+- The UI uses a compact browser-style navigation bar with proxy and language selectors.
 - The browser clears history and visited links on exit.
 
 ## Requirements
@@ -37,20 +38,6 @@ Create and activate a virtual environment:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-```
-
-Install Qt WebEngine dependencies for your platform.
-
-macOS:
-
-```bash
-brew install python3-pyqt5.qtwebengine
-```
-
-Debian/Ubuntu:
-
-```bash
-sudo apt-get install python3-pyqt5.qtwebengine
 ```
 
 Install Python dependencies:

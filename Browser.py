@@ -3,18 +3,18 @@ import sys
 from pathlib import Path
 from urllib.parse import urlsplit
 
-import PyQt5
+import PySide6
 
 
 def configure_qt_environment():
-    pyqt_plugins = Path(PyQt5.__file__).resolve().parent / "Qt5" / "plugins"
-    platform_plugins = pyqt_plugins / "platforms"
+    qt_plugins = Path(PySide6.__file__).resolve().parent / "Qt" / "plugins"
+    platform_plugins = qt_plugins / "platforms"
+
+    if qt_plugins.exists():
+        os.environ["QT_PLUGIN_PATH"] = str(qt_plugins)
 
     if platform_plugins.exists():
-        os.environ.setdefault("QT_QPA_PLATFORM_PLUGIN_PATH", str(platform_plugins))
-
-    if pyqt_plugins.exists():
-        os.environ.setdefault("QT_PLUGIN_PATH", str(pyqt_plugins))
+        os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = str(platform_plugins)
 
     if sys.platform == "darwin":
         os.environ.setdefault("QT_QPA_PLATFORM", "cocoa")
@@ -22,25 +22,27 @@ def configure_qt_environment():
 
 configure_qt_environment()
 
-from PyQt5.QtCore import QByteArray, Qt, QUrl
-from PyQt5.QtGui import QIcon
-from PyQt5.QtNetwork import QNetworkProxy
-from PyQt5.QtWebEngineCore import QWebEngineUrlRequestInterceptor
-from PyQt5.QtWebEngineWidgets import (
+from PySide6.QtCore import QByteArray, QUrl
+from PySide6.QtGui import QIcon, QKeySequence, QShortcut
+from PySide6.QtNetwork import QNetworkProxy
+from PySide6.QtWebEngineCore import (
     QWebEnginePage,
     QWebEngineProfile,
     QWebEngineSettings,
-    QWebEngineView,
+    QWebEngineUrlRequestInterceptor,
 )
-from PyQt5.QtWidgets import (
-    QAction,
+from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtWidgets import (
     QApplication,
-    QCheckBox,
     QComboBox,
+    QFrame,
+    QHBoxLayout,
     QLabel,
     QLineEdit,
     QMainWindow,
-    QToolBar,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
 
 
@@ -64,8 +66,10 @@ TRANSLATIONS = {
         "reload": "Reload",
         "home": "Home",
         "router_console": "I2P Router Console",
-        "use_i2p_proxy": "Use I2P Proxy",
-        "use_tor_proxy": "Use Tor Proxy",
+        "proxy": "Proxy",
+        "proxy_i2p": "I2P",
+        "proxy_tor": "Tor",
+        "proxy_none": "Direct",
         "proxy_status_disabled": "Proxy Status: Disabled",
         "proxy_status_i2p": "Proxy Status: I2P {host}:{port}",
         "proxy_status_tor": "Proxy Status: Tor {host}:{port}",
@@ -80,8 +84,10 @@ TRANSLATIONS = {
         "reload": "刷新",
         "home": "主页",
         "router_console": "I2P 路由控制台",
-        "use_i2p_proxy": "使用 I2P 代理",
-        "use_tor_proxy": "使用 Tor 代理",
+        "proxy": "代理",
+        "proxy_i2p": "I2P",
+        "proxy_tor": "Tor",
+        "proxy_none": "直连",
         "proxy_status_disabled": "代理状态：已关闭",
         "proxy_status_i2p": "代理状态：I2P {host}:{port}",
         "proxy_status_tor": "代理状态：Tor {host}:{port}",
@@ -96,8 +102,10 @@ TRANSLATIONS = {
         "reload": "重新整理",
         "home": "首頁",
         "router_console": "I2P 路由控制台",
-        "use_i2p_proxy": "使用 I2P 代理",
-        "use_tor_proxy": "使用 Tor 代理",
+        "proxy": "代理",
+        "proxy_i2p": "I2P",
+        "proxy_tor": "Tor",
+        "proxy_none": "直連",
         "proxy_status_disabled": "代理狀態：已關閉",
         "proxy_status_i2p": "代理狀態：I2P {host}:{port}",
         "proxy_status_tor": "代理狀態：Tor {host}:{port}",
@@ -118,8 +126,8 @@ class NWUrlRequestInterceptor(QWebEngineUrlRequestInterceptor):
     def interceptRequest(self, info):
         for header, value in self.headers:
             info.setHttpHeader(
-                QByteArray(header.encode("utf-8")),
-                QByteArray(value.encode("utf-8")),
+                QByteArray(header.encode()),
+                QByteArray(value.encode()),
             )
 
 
@@ -127,16 +135,19 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.language = DEFAULT_LANGUAGE
-        self.actions = {}
+        self.nav_buttons = {}
         self.setWindowTitle(self.tr_text("window_title"))
+        self.setMinimumSize(1100, 720)
 
         # Creates a QWebEngineView
         self.browser = QWebEngineView()
 
         # Creates an off-the-record custom profile.
         self.profile = QWebEngineProfile(self)
-        self.profile.setHttpCacheType(QWebEngineProfile.NoCache)
-        self.profile.setPersistentCookiesPolicy(QWebEngineProfile.NoPersistentCookies)
+        self.profile.setHttpCacheType(QWebEngineProfile.HttpCacheType.NoCache)
+        self.profile.setPersistentCookiesPolicy(
+            QWebEngineProfile.PersistentCookiesPolicy.NoPersistentCookies
+        )
         self.profile.cookieStore().setCookieFilter(self._allow_first_party_cookies_only)
 
         # Sets the custom profile for the browser
@@ -144,83 +155,25 @@ class MainWindow(QMainWindow):
 
         # Disables JavaScript by default
         settings = self.browser.page().settings()
-        settings.setAttribute(QWebEngineSettings.JavascriptEnabled, False)
-        settings.setAttribute(QWebEngineSettings.WebRTCPublicInterfacesOnly, True)  # Disable WebRTC
+        settings.setAttribute(QWebEngineSettings.WebAttribute.JavascriptEnabled, False)
+        settings.setAttribute(QWebEngineSettings.WebAttribute.WebRTCPublicInterfacesOnly, True)
 
         # Disables local storage (caching)
-        settings.setAttribute(QWebEngineSettings.LocalStorageEnabled, False)
+        settings.setAttribute(QWebEngineSettings.WebAttribute.LocalStorageEnabled, False)
 
         # Disables file access
-        settings.setAttribute(QWebEngineSettings.LocalContentCanAccessFileUrls, False)
-        settings.setAttribute(QWebEngineSettings.LocalContentCanAccessRemoteUrls, False)
+        settings.setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessFileUrls, False)
+        settings.setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, False)
 
         # Sets custom User-Agent string
         user_agent = "Mozilla/5.0 (Windows NT 10.0; rv:102.0) Gecko/20100101 Firefox/102.0"
         self.browser.page().profile().setHttpUserAgent(user_agent)
 
-        # Sets the central widget
-        self.setCentralWidget(self.browser)
+        self._build_ui()
 
-        # Shows the window maximized
-        self.showMaximized()
-
-        # Creates a navigation toolbar
-        navbar = QToolBar()
-        self.addToolBar(navbar)
-
-        # Adds navigation actions (Back, Forward, Reload, Home)
-        back_btn = QAction(self.tr_text("back"), self)
-        back_btn.triggered.connect(self.browser.back)
-        navbar.addAction(back_btn)
-        self.actions["back"] = back_btn
-
-        forward_btn = QAction(self.tr_text("forward"), self)
-        forward_btn.triggered.connect(self.browser.forward)
-        navbar.addAction(forward_btn)
-        self.actions["forward"] = forward_btn
-
-        reload_btn = QAction(self.tr_text("reload"), self)
-        reload_btn.triggered.connect(self.browser.reload)
-        navbar.addAction(reload_btn)
-        self.actions["reload"] = reload_btn
-
-        home_btn = QAction(self.tr_text("home"), self)
-        home_btn.triggered.connect(self.navigate_home)
-        navbar.addAction(home_btn)
-        self.actions["home"] = home_btn
-
-        # Button for I2P Router Console
-        custom_redirect_btn = QAction(QIcon(str(APP_ICON)), self.tr_text("router_console"), self)
-        custom_redirect_btn.triggered.connect(self.custom_redirect)
-        navbar.addAction(custom_redirect_btn)
-        self.actions["router_console"] = custom_redirect_btn
-
-        # Creates a URL input field
-        self.url_bar = QLineEdit()
-        self.url_bar.returnPressed.connect(self.navigate_to_url)
-        navbar.addWidget(self.url_bar)
-
-        # Creates proxy switches. Only one proxy mode can be active at a time.
-        self.i2p_proxy_switch = QCheckBox(self.tr_text("use_i2p_proxy"), self)
-        self.i2p_proxy_switch.stateChanged.connect(self.toggle_i2p_proxy)
-        navbar.addWidget(self.i2p_proxy_switch)
-
-        self.tor_proxy_switch = QCheckBox(self.tr_text("use_tor_proxy"), self)
-        self.tor_proxy_switch.stateChanged.connect(self.toggle_tor_proxy)
-        navbar.addWidget(self.tor_proxy_switch)
-
-        self.language_label = QLabel(self.tr_text("language"), self)
-        navbar.addWidget(self.language_label)
-
-        self.language_selector = QComboBox(self)
-        for language_code, translation in TRANSLATIONS.items():
-            self.language_selector.addItem(translation["language_name"], language_code)
-        self.language_selector.currentIndexChanged.connect(self.change_language)
-        navbar.addWidget(self.language_selector)
-
-        # Creates a status label for proxy
-        self.status_label = QLabel(self.tr_text("proxy_status_disabled"), self)
-        navbar.addWidget(self.status_label)
+        QShortcut(QKeySequence.Refresh, self, activated=self.browser.reload)
+        QShortcut(QKeySequence("Alt+Left"), self, activated=self.browser.back)
+        QShortcut(QKeySequence("Alt+Right"), self, activated=self.browser.forward)
 
         # Connects the URL change signal to update the URL bar
         self.browser.urlChanged.connect(self.update_url)
@@ -228,12 +181,12 @@ class MainWindow(QMainWindow):
         # Sets up proxies. I2P is enabled by default.
         self.proxy_mode = "none"
         self.i2p_proxy = QNetworkProxy()
-        self.i2p_proxy.setType(QNetworkProxy.HttpProxy)
+        self.i2p_proxy.setType(QNetworkProxy.ProxyType.HttpProxy)
         self.i2p_proxy.setHostName(I2P_PROXY_HOST)
         self.i2p_proxy.setPort(I2P_PROXY_PORT)
 
         self.tor_proxy = QNetworkProxy()
-        self.tor_proxy.setType(QNetworkProxy.Socks5Proxy)
+        self.tor_proxy.setType(QNetworkProxy.ProxyType.Socks5Proxy)
         self.tor_proxy.setHostName(TOR_PROXY_HOST)
         self.tor_proxy.setPort(TOR_PROXY_PORT)
 
@@ -241,11 +194,170 @@ class MainWindow(QMainWindow):
         self.request_interceptor = NWUrlRequestInterceptor(self.default_headers())
         self.browser.page().profile().setUrlRequestInterceptor(self.request_interceptor)
 
-        # Enables I2P proxy initially and set the checkbox state
-        self.i2p_proxy_switch.setChecked(True)
-
-        # Sets the initial URL
+        # Enables I2P proxy initially and set the initial URL
+        self.proxy_selector.setCurrentIndex(self.proxy_selector.findData("i2p"))
         self.browser.setUrl(QUrl(I2P_HOME_URL))
+
+    def _build_ui(self):
+        central_widget = QWidget(self)
+        central_widget.setObjectName("appShell")
+        root_layout = QVBoxLayout(central_widget)
+        root_layout.setContentsMargins(0, 0, 0, 0)
+        root_layout.setSpacing(0)
+
+        nav_bar = QFrame(self)
+        nav_bar.setObjectName("navBar")
+        nav_layout = QHBoxLayout(nav_bar)
+        nav_layout.setContentsMargins(12, 10, 12, 10)
+        nav_layout.setSpacing(8)
+
+        self.nav_buttons["back"] = self._create_nav_button("back", "‹", self.browser.back)
+        self.nav_buttons["forward"] = self._create_nav_button("forward", "›", self.browser.forward)
+        self.nav_buttons["reload"] = self._create_nav_button("reload", "⟳", self.browser.reload)
+        self.nav_buttons["home"] = self._create_nav_button("home", "⌂", self.navigate_home)
+        self.nav_buttons["router_console"] = self._create_nav_button(
+            "router_console",
+            "I2P",
+            self.custom_redirect,
+            "brandButton",
+        )
+
+        for button in self.nav_buttons.values():
+            nav_layout.addWidget(button)
+
+        self.url_bar = QLineEdit()
+        self.url_bar.setObjectName("urlBar")
+        self.url_bar.returnPressed.connect(self.navigate_to_url)
+        nav_layout.addWidget(self.url_bar, 1)
+
+        self.proxy_label = QLabel(self.tr_text("proxy"), self)
+        self.proxy_label.setObjectName("controlLabel")
+        nav_layout.addWidget(self.proxy_label)
+
+        self.proxy_selector = QComboBox(self)
+        self.proxy_selector.setObjectName("controlSelect")
+        self.populate_proxy_selector()
+        self.proxy_selector.currentIndexChanged.connect(self.change_proxy_mode)
+        nav_layout.addWidget(self.proxy_selector)
+
+        self.language_label = QLabel(self.tr_text("language"), self)
+        self.language_label.setObjectName("controlLabel")
+        nav_layout.addWidget(self.language_label)
+
+        self.language_selector = QComboBox(self)
+        self.language_selector.setObjectName("controlSelect")
+        for language_code, translation in TRANSLATIONS.items():
+            self.language_selector.addItem(translation["language_name"], language_code)
+        self.language_selector.currentIndexChanged.connect(self.change_language)
+        nav_layout.addWidget(self.language_selector)
+
+        status_bar = QFrame(self)
+        status_bar.setObjectName("statusBar")
+        status_layout = QHBoxLayout(status_bar)
+        status_layout.setContentsMargins(14, 6, 14, 6)
+        status_layout.setSpacing(8)
+
+        self.status_label = QLabel(self.tr_text("proxy_status_disabled"), self)
+        self.status_label.setObjectName("statusLabel")
+        status_layout.addWidget(self.status_label)
+        status_layout.addStretch(1)
+
+        root_layout.addWidget(nav_bar)
+        root_layout.addWidget(self.browser, 1)
+        root_layout.addWidget(status_bar)
+
+        self.setCentralWidget(central_widget)
+        self.apply_styles()
+        self.apply_language()
+
+    def _create_nav_button(self, key, symbol, callback, object_name="navButton"):
+        button = QPushButton(symbol, self)
+        button.setObjectName(object_name)
+        button.setFixedHeight(34)
+        button.setMinimumWidth(40)
+        button.clicked.connect(callback)
+        button.setToolTip(self.tr_text(key))
+        return button
+
+    def apply_styles(self):
+        self.setStyleSheet("""
+            QWidget#appShell {
+                background: #f4f6f8;
+                color: #1f2933;
+                font-size: 13px;
+            }
+
+            QFrame#navBar {
+                background: #ffffff;
+                border-bottom: 1px solid #d9e2ec;
+            }
+
+            QPushButton#navButton,
+            QPushButton#brandButton {
+                border: 1px solid #cbd5e1;
+                border-radius: 7px;
+                background: #f8fafc;
+                color: #102a43;
+                font-weight: 700;
+                padding: 0 10px;
+            }
+
+            QPushButton#navButton:hover,
+            QPushButton#brandButton:hover {
+                background: #e0f2fe;
+                border-color: #38bdf8;
+            }
+
+            QPushButton#navButton:pressed,
+            QPushButton#brandButton:pressed {
+                background: #bae6fd;
+            }
+
+            QPushButton#brandButton {
+                color: #0f766e;
+                min-width: 46px;
+            }
+
+            QLineEdit#urlBar {
+                border: 1px solid #cbd5e1;
+                border-radius: 8px;
+                background: #ffffff;
+                padding: 7px 12px;
+                selection-background-color: #bae6fd;
+                font-size: 14px;
+            }
+
+            QLineEdit#urlBar:focus {
+                border-color: #0284c7;
+            }
+
+            QLabel#controlLabel {
+                color: #52616b;
+                font-weight: 700;
+                padding-left: 6px;
+            }
+
+            QComboBox#controlSelect {
+                border: 1px solid #cbd5e1;
+                border-radius: 7px;
+                background: #ffffff;
+                padding: 5px 26px 5px 10px;
+                min-width: 104px;
+            }
+
+            QComboBox#controlSelect:focus {
+                border-color: #0284c7;
+            }
+
+            QFrame#statusBar {
+                background: #ffffff;
+                border-top: 1px solid #d9e2ec;
+            }
+
+            QLabel#statusLabel {
+                font-weight: 700;
+            }
+        """)
 
     @staticmethod
     def _allow_first_party_cookies_only(request):
@@ -253,6 +365,18 @@ class MainWindow(QMainWindow):
 
     def tr_text(self, key):
         return TRANSLATIONS[self.language][key]
+
+    def populate_proxy_selector(self):
+        selected_mode = self.proxy_selector.currentData()
+        self.proxy_selector.blockSignals(True)
+        self.proxy_selector.clear()
+        self.proxy_selector.addItem(self.tr_text("proxy_i2p"), "i2p")
+        self.proxy_selector.addItem(self.tr_text("proxy_tor"), "tor")
+        self.proxy_selector.addItem(self.tr_text("proxy_none"), "none")
+
+        index = self.proxy_selector.findData(selected_mode or "i2p")
+        self.proxy_selector.setCurrentIndex(max(index, 0))
+        self.proxy_selector.blockSignals(False)
 
     def default_headers(self):
         return [
@@ -272,25 +396,19 @@ class MainWindow(QMainWindow):
 
     def apply_language(self):
         self.setWindowTitle(self.tr_text("window_title"))
-        for action_key, action in self.actions.items():
-            action.setText(self.tr_text(action_key))
 
-        self.i2p_proxy_switch.setText(self.tr_text("use_i2p_proxy"))
-        self.tor_proxy_switch.setText(self.tr_text("use_tor_proxy"))
+        for button_key, button in self.nav_buttons.items():
+            button.setToolTip(self.tr_text(button_key))
+
+        self.proxy_label.setText(self.tr_text("proxy"))
+        self.populate_proxy_selector()
         self.language_label.setText(self.tr_text("language"))
         self.update_proxy_status()
 
-    def toggle_i2p_proxy(self, state):
-        if state == Qt.Checked:
-            self._set_proxy_mode("i2p")
-        else:
-            self._set_proxy_mode("none")
-
-    def toggle_tor_proxy(self, state):
-        if state == Qt.Checked:
-            self._set_proxy_mode("tor")
-        else:
-            self._set_proxy_mode("none")
+    def change_proxy_mode(self, _index=None):
+        mode = self.proxy_selector.currentData()
+        if mode in {"i2p", "tor", "none"}:
+            self._set_proxy_mode(mode)
 
     def _set_proxy_mode(self, mode):
         self.proxy_mode = mode
@@ -302,16 +420,17 @@ class MainWindow(QMainWindow):
         else:
             QNetworkProxy.setApplicationProxy(QNetworkProxy())
 
-        self._sync_proxy_switches()
+        self._sync_proxy_selector()
         self.update_proxy_status()
 
-    def _sync_proxy_switches(self):
-        self.i2p_proxy_switch.blockSignals(True)
-        self.tor_proxy_switch.blockSignals(True)
-        self.i2p_proxy_switch.setChecked(self.proxy_mode == "i2p")
-        self.tor_proxy_switch.setChecked(self.proxy_mode == "tor")
-        self.i2p_proxy_switch.blockSignals(False)
-        self.tor_proxy_switch.blockSignals(False)
+    def _sync_proxy_selector(self):
+        index = self.proxy_selector.findData(self.proxy_mode)
+        if index < 0 or index == self.proxy_selector.currentIndex():
+            return
+
+        self.proxy_selector.blockSignals(True)
+        self.proxy_selector.setCurrentIndex(index)
+        self.proxy_selector.blockSignals(False)
 
     def navigate_home(self):
         if self.proxy_mode == "i2p":
@@ -389,7 +508,7 @@ def main():
     window = MainWindow()
     window.showMaximized()
 
-    return app.exec_()
+    return app.exec()
 
 
 if __name__ == "__main__":
