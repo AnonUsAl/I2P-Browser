@@ -3,6 +3,25 @@ import sys
 from pathlib import Path
 from urllib.parse import urlsplit
 
+import PyQt5
+
+
+def configure_qt_environment():
+    pyqt_plugins = Path(PyQt5.__file__).resolve().parent / "Qt5" / "plugins"
+    platform_plugins = pyqt_plugins / "platforms"
+
+    if platform_plugins.exists():
+        os.environ.setdefault("QT_QPA_PLATFORM_PLUGIN_PATH", str(platform_plugins))
+
+    if pyqt_plugins.exists():
+        os.environ.setdefault("QT_PLUGIN_PATH", str(pyqt_plugins))
+
+    if sys.platform == "darwin":
+        os.environ.setdefault("QT_QPA_PLATFORM", "cocoa")
+
+
+configure_qt_environment()
+
 from PyQt5.QtCore import QByteArray, Qt, QUrl
 from PyQt5.QtGui import QIcon
 from PyQt5.QtNetwork import QNetworkProxy
