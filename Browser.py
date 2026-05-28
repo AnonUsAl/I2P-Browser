@@ -31,6 +31,8 @@ CLEARNET_HOME_URL = "https://i2pengine.com/"
 ROUTER_CONSOLE_URL = "http://127.0.0.1:7657/"
 I2P_PROXY_HOST = "127.0.0.1"
 I2P_PROXY_PORT = 4444
+TOR_PROXY_HOST = "127.0.0.1"
+TOR_PROXY_PORT = 9050
 
 
 class NWUrlRequestInterceptor(QWebEngineUrlRequestInterceptor):
@@ -119,24 +121,33 @@ class MainWindow(QMainWindow):
         self.url_bar.returnPressed.connect(self.navigate_to_url)
         navbar.addWidget(self.url_bar)
 
-        # Creates a proxy switch
-        self.proxy_switch = QCheckBox('Use I2P Proxy', self)
-        self.proxy_switch.stateChanged.connect(self.toggle_proxy)
-        navbar.addWidget(self.proxy_switch)
+        # Creates proxy switches. Only one proxy mode can be active at a time.
+        self.i2p_proxy_switch = QCheckBox('Use I2P Proxy', self)
+        self.i2p_proxy_switch.stateChanged.connect(self.toggle_i2p_proxy)
+        navbar.addWidget(self.i2p_proxy_switch)
+
+        self.tor_proxy_switch = QCheckBox('Use Tor Proxy', self)
+        self.tor_proxy_switch.stateChanged.connect(self.toggle_tor_proxy)
+        navbar.addWidget(self.tor_proxy_switch)
 
         # Creates a status label for proxy
-        self.status_label = QLabel("Proxy Status: Disconnected", self)
+        self.status_label = QLabel("Proxy Status: Disabled", self)
         navbar.addWidget(self.status_label)
 
         # Connects the URL change signal to update the URL bar
         self.browser.urlChanged.connect(self.update_url)
 
-        # Sets up a proxy (Initially enabled)
-        self.proxy_enabled = True
-        self.proxy = QNetworkProxy()
-        self.proxy.setType(QNetworkProxy.HttpProxy)
-        self.proxy.setHostName(I2P_PROXY_HOST)
-        self.proxy.setPort(I2P_PROXY_PORT)
+        # Sets up proxies. I2P is enabled by default.
+        self.proxy_mode = "none"
+        self.i2p_proxy = QNetworkProxy()
+        self.i2p_proxy.setType(QNetworkProxy.HttpProxy)
+        self.i2p_proxy.setHostName(I2P_PROXY_HOST)
+        self.i2p_proxy.setPort(I2P_PROXY_PORT)
+
+        self.tor_proxy = QNetworkProxy()
+        self.tor_proxy.setType(QNetworkProxy.Socks5Proxy)
+        self.tor_proxy.setHostName(TOR_PROXY_HOST)
+        self.tor_proxy.setPort(TOR_PROXY_PORT)
 
         # Initialize the NWUrlRequestInterceptor with default headers
         default_headers = [
@@ -147,8 +158,8 @@ class MainWindow(QMainWindow):
         self.request_interceptor = NWUrlRequestInterceptor(default_headers)
         self.browser.page().profile().setUrlRequestInterceptor(self.request_interceptor)
 
-        # Enables the proxy initially and set the checkbox state
-        self.proxy_switch.setChecked(True)
+        # Enables I2P proxy initially and set the checkbox state
+        self.i2p_proxy_switch.setChecked(True)
 
         # Sets the initial URL
         self.browser.setUrl(QUrl(I2P_HOME_URL))
@@ -157,18 +168,41 @@ class MainWindow(QMainWindow):
     def _allow_first_party_cookies_only(request):
         return not request.thirdParty
 
-    def toggle_proxy(self, state):
+    def toggle_i2p_proxy(self, state):
         if state == Qt.Checked:
-            QNetworkProxy.setApplicationProxy(self.proxy)
-            self.proxy_enabled = True
+            self._set_proxy_mode("i2p")
+        else:
+            self._set_proxy_mode("none")
+
+    def toggle_tor_proxy(self, state):
+        if state == Qt.Checked:
+            self._set_proxy_mode("tor")
+        else:
+            self._set_proxy_mode("none")
+
+    def _set_proxy_mode(self, mode):
+        self.proxy_mode = mode
+
+        if mode == "i2p":
+            QNetworkProxy.setApplicationProxy(self.i2p_proxy)
+        elif mode == "tor":
+            QNetworkProxy.setApplicationProxy(self.tor_proxy)
         else:
             QNetworkProxy.setApplicationProxy(QNetworkProxy())
-            self.proxy_enabled = False
+
+        self._sync_proxy_switches()
         self.update_proxy_status()
 
+    def _sync_proxy_switches(self):
+        self.i2p_proxy_switch.blockSignals(True)
+        self.tor_proxy_switch.blockSignals(True)
+        self.i2p_proxy_switch.setChecked(self.proxy_mode == "i2p")
+        self.tor_proxy_switch.setChecked(self.proxy_mode == "tor")
+        self.i2p_proxy_switch.blockSignals(False)
+        self.tor_proxy_switch.blockSignals(False)
+
     def navigate_home(self):
-        use_i2p_proxy = self.proxy_switch.isChecked()
-        if use_i2p_proxy:
+        if self.proxy_mode == "i2p":
             # If the checkbox is checked, use the Legwork I2P URL
             self.browser.setUrl(QUrl(I2P_HOME_URL))
         else:
@@ -199,11 +233,14 @@ class MainWindow(QMainWindow):
 
 
     def update_proxy_status(self):
-        if self.proxy_enabled:
-            self.status_label.setText("Proxy Status: Connected")
+        if self.proxy_mode == "i2p":
+            self.status_label.setText(f"Proxy Status: I2P {I2P_PROXY_HOST}:{I2P_PROXY_PORT}")
+            self.status_label.setStyleSheet("color: green;")
+        elif self.proxy_mode == "tor":
+            self.status_label.setText(f"Proxy Status: Tor {TOR_PROXY_HOST}:{TOR_PROXY_PORT}")
             self.status_label.setStyleSheet("color: green;")
         else:
-            self.status_label.setText("Proxy Status: Disconnected")
+            self.status_label.setText("Proxy Status: Disabled")
             self.status_label.setStyleSheet("color: red;")
 
     def custom_redirect(self):

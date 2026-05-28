@@ -11,6 +11,7 @@ I2P, which stands for "Invisible Internet Project," is an anonymous network laye
 - Built in Python
 - No browsing history and cache
 - I2P Proxy Killswitch (prevents data leaks)
+- Optional Tor SOCKS5 proxy mode
 
 ## Installation:
 
@@ -28,6 +29,8 @@ I2P, which stands for "Invisible Internet Project," is an anonymous network laye
 ## Usage:
 Step 1: Start the I2P router in the background and make sure the HTTP proxy is available at `127.0.0.1:4444`.
 
+Optional: Start Tor in the background if you want to use Tor mode. The browser expects a SOCKS5 proxy at `127.0.0.1:9050`.
+
 Step 2:
 
      python3 Browser.py
@@ -35,6 +38,8 @@ Step 2:
 ## Requirements:
 
 - I2P Router ---> https://geti2p.net/en/download
+
+- Tor service ---> https://www.torproject.org/download/tor/
 
 - Python >=3.9
 
