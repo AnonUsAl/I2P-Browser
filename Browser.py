@@ -17,6 +17,7 @@ from PyQt5.QtWidgets import (
     QAction,
     QApplication,
     QCheckBox,
+    QComboBox,
     QLabel,
     QLineEdit,
     QMainWindow,
@@ -33,6 +34,58 @@ I2P_PROXY_HOST = "127.0.0.1"
 I2P_PROXY_PORT = 4444
 TOR_PROXY_HOST = "127.0.0.1"
 TOR_PROXY_PORT = 9050
+DEFAULT_LANGUAGE = "en"
+
+TRANSLATIONS = {
+    "en": {
+        "language_name": "English",
+        "window_title": "I2P Browser",
+        "back": "Back",
+        "forward": "Forward",
+        "reload": "Reload",
+        "home": "Home",
+        "router_console": "I2P Router Console",
+        "use_i2p_proxy": "Use I2P Proxy",
+        "use_tor_proxy": "Use Tor Proxy",
+        "proxy_status_disabled": "Proxy Status: Disabled",
+        "proxy_status_i2p": "Proxy Status: I2P {host}:{port}",
+        "proxy_status_tor": "Proxy Status: Tor {host}:{port}",
+        "language": "Language",
+        "accept_language": "en-US,en;q=0.5",
+    },
+    "zh_CN": {
+        "language_name": "简体中文",
+        "window_title": "I2P 浏览器",
+        "back": "后退",
+        "forward": "前进",
+        "reload": "刷新",
+        "home": "主页",
+        "router_console": "I2P 路由控制台",
+        "use_i2p_proxy": "使用 I2P 代理",
+        "use_tor_proxy": "使用 Tor 代理",
+        "proxy_status_disabled": "代理状态：已关闭",
+        "proxy_status_i2p": "代理状态：I2P {host}:{port}",
+        "proxy_status_tor": "代理状态：Tor {host}:{port}",
+        "language": "语言",
+        "accept_language": "zh-CN,zh;q=0.9,en;q=0.5",
+    },
+    "zh_TW": {
+        "language_name": "繁體中文",
+        "window_title": "I2P 瀏覽器",
+        "back": "上一頁",
+        "forward": "下一頁",
+        "reload": "重新整理",
+        "home": "首頁",
+        "router_console": "I2P 路由控制台",
+        "use_i2p_proxy": "使用 I2P 代理",
+        "use_tor_proxy": "使用 Tor 代理",
+        "proxy_status_disabled": "代理狀態：已關閉",
+        "proxy_status_i2p": "代理狀態：I2P {host}:{port}",
+        "proxy_status_tor": "代理狀態：Tor {host}:{port}",
+        "language": "語言",
+        "accept_language": "zh-TW,zh;q=0.9,en;q=0.5",
+    },
+}
 
 
 class NWUrlRequestInterceptor(QWebEngineUrlRequestInterceptor):
@@ -54,7 +107,9 @@ class NWUrlRequestInterceptor(QWebEngineUrlRequestInterceptor):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("I2P Browser")
+        self.language = DEFAULT_LANGUAGE
+        self.actions = {}
+        self.setWindowTitle(self.tr_text("window_title"))
 
         # Creates a QWebEngineView
         self.browser = QWebEngineView()
@@ -95,26 +150,31 @@ class MainWindow(QMainWindow):
         self.addToolBar(navbar)
 
         # Adds navigation actions (Back, Forward, Reload, Home)
-        back_btn = QAction('Back', self)
+        back_btn = QAction(self.tr_text("back"), self)
         back_btn.triggered.connect(self.browser.back)
         navbar.addAction(back_btn)
+        self.actions["back"] = back_btn
 
-        forward_btn = QAction('Forward', self)
+        forward_btn = QAction(self.tr_text("forward"), self)
         forward_btn.triggered.connect(self.browser.forward)
         navbar.addAction(forward_btn)
+        self.actions["forward"] = forward_btn
 
-        reload_btn = QAction('Reload', self)
+        reload_btn = QAction(self.tr_text("reload"), self)
         reload_btn.triggered.connect(self.browser.reload)
         navbar.addAction(reload_btn)
+        self.actions["reload"] = reload_btn
 
-        home_btn = QAction('Home', self)
+        home_btn = QAction(self.tr_text("home"), self)
         home_btn.triggered.connect(self.navigate_home)
         navbar.addAction(home_btn)
+        self.actions["home"] = home_btn
 
         # Button for I2P Router Console
-        custom_redirect_btn = QAction(QIcon(str(APP_ICON)), 'I2P Router Console', self)
+        custom_redirect_btn = QAction(QIcon(str(APP_ICON)), self.tr_text("router_console"), self)
         custom_redirect_btn.triggered.connect(self.custom_redirect)
         navbar.addAction(custom_redirect_btn)
+        self.actions["router_console"] = custom_redirect_btn
 
         # Creates a URL input field
         self.url_bar = QLineEdit()
@@ -122,16 +182,25 @@ class MainWindow(QMainWindow):
         navbar.addWidget(self.url_bar)
 
         # Creates proxy switches. Only one proxy mode can be active at a time.
-        self.i2p_proxy_switch = QCheckBox('Use I2P Proxy', self)
+        self.i2p_proxy_switch = QCheckBox(self.tr_text("use_i2p_proxy"), self)
         self.i2p_proxy_switch.stateChanged.connect(self.toggle_i2p_proxy)
         navbar.addWidget(self.i2p_proxy_switch)
 
-        self.tor_proxy_switch = QCheckBox('Use Tor Proxy', self)
+        self.tor_proxy_switch = QCheckBox(self.tr_text("use_tor_proxy"), self)
         self.tor_proxy_switch.stateChanged.connect(self.toggle_tor_proxy)
         navbar.addWidget(self.tor_proxy_switch)
 
+        self.language_label = QLabel(self.tr_text("language"), self)
+        navbar.addWidget(self.language_label)
+
+        self.language_selector = QComboBox(self)
+        for language_code, translation in TRANSLATIONS.items():
+            self.language_selector.addItem(translation["language_name"], language_code)
+        self.language_selector.currentIndexChanged.connect(self.change_language)
+        navbar.addWidget(self.language_selector)
+
         # Creates a status label for proxy
-        self.status_label = QLabel("Proxy Status: Disabled", self)
+        self.status_label = QLabel(self.tr_text("proxy_status_disabled"), self)
         navbar.addWidget(self.status_label)
 
         # Connects the URL change signal to update the URL bar
@@ -150,12 +219,7 @@ class MainWindow(QMainWindow):
         self.tor_proxy.setPort(TOR_PROXY_PORT)
 
         # Initialize the NWUrlRequestInterceptor with default headers
-        default_headers = [
-            ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"),
-            ("Accept-Language", "en-US,en;q=0.5"),
-            ("Accept-Encoding", "gzip, deflate, br")
-        ]
-        self.request_interceptor = NWUrlRequestInterceptor(default_headers)
+        self.request_interceptor = NWUrlRequestInterceptor(self.default_headers())
         self.browser.page().profile().setUrlRequestInterceptor(self.request_interceptor)
 
         # Enables I2P proxy initially and set the checkbox state
@@ -167,6 +231,35 @@ class MainWindow(QMainWindow):
     @staticmethod
     def _allow_first_party_cookies_only(request):
         return not request.thirdParty
+
+    def tr_text(self, key):
+        return TRANSLATIONS[self.language][key]
+
+    def default_headers(self):
+        return [
+            ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"),
+            ("Accept-Language", self.tr_text("accept_language")),
+            ("Accept-Encoding", "gzip, deflate, br"),
+        ]
+
+    def change_language(self, _index=None):
+        language_code = self.language_selector.currentData()
+        if language_code not in TRANSLATIONS:
+            return
+
+        self.language = language_code
+        self.request_interceptor.set_headers(self.default_headers())
+        self.apply_language()
+
+    def apply_language(self):
+        self.setWindowTitle(self.tr_text("window_title"))
+        for action_key, action in self.actions.items():
+            action.setText(self.tr_text(action_key))
+
+        self.i2p_proxy_switch.setText(self.tr_text("use_i2p_proxy"))
+        self.tor_proxy_switch.setText(self.tr_text("use_tor_proxy"))
+        self.language_label.setText(self.tr_text("language"))
+        self.update_proxy_status()
 
     def toggle_i2p_proxy(self, state):
         if state == Qt.Checked:
@@ -234,13 +327,23 @@ class MainWindow(QMainWindow):
 
     def update_proxy_status(self):
         if self.proxy_mode == "i2p":
-            self.status_label.setText(f"Proxy Status: I2P {I2P_PROXY_HOST}:{I2P_PROXY_PORT}")
+            self.status_label.setText(
+                self.tr_text("proxy_status_i2p").format(
+                    host=I2P_PROXY_HOST,
+                    port=I2P_PROXY_PORT,
+                )
+            )
             self.status_label.setStyleSheet("color: green;")
         elif self.proxy_mode == "tor":
-            self.status_label.setText(f"Proxy Status: Tor {TOR_PROXY_HOST}:{TOR_PROXY_PORT}")
+            self.status_label.setText(
+                self.tr_text("proxy_status_tor").format(
+                    host=TOR_PROXY_HOST,
+                    port=TOR_PROXY_PORT,
+                )
+            )
             self.status_label.setStyleSheet("color: green;")
         else:
-            self.status_label.setText("Proxy Status: Disabled")
+            self.status_label.setText(self.tr_text("proxy_status_disabled"))
             self.status_label.setStyleSheet("color: red;")
 
     def custom_redirect(self):

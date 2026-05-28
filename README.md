@@ -12,6 +12,7 @@ I2P, which stands for "Invisible Internet Project," is an anonymous network laye
 - No browsing history and cache
 - I2P Proxy Killswitch (prevents data leaks)
 - Optional Tor SOCKS5 proxy mode
+- Multilingual interface (English, Simplified Chinese, Traditional Chinese)
 
 ## Installation:
 
