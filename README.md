@@ -14,17 +14,19 @@ I2P, which stands for "Invisible Internet Project," is an anonymous network laye
 
 ## Installation:
 
-     git clone https://github.com/umutcamliyurt/I2P-Browser.git
+     git clone https://github.com/AnonUsAl/I2P-Browser.git
      cd I2P-Browser/
+     python3 -m venv .venv
+     source .venv/bin/activate
      #MacOS:
      brew install python3-pyqt5.qtwebengine
      #Linux
      sudo apt-get install python3-pyqt5.qtwebengine
-     pip3 install -r requirements.txt
+     python3 -m pip install -r requirements.txt
      python3 Browser.py
 
 ## Usage:
-Step 1: Start I2P router in the background
+Step 1: Start the I2P router in the background and make sure the HTTP proxy is available at `127.0.0.1:4444`.
 
 Step 2:
 
