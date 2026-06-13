@@ -6,6 +6,18 @@ from urllib.parse import urlsplit
 import PyQt5
 
 
+APP_DIR = Path(__file__).resolve().parent
+APP_ICON = APP_DIR / "i2p_icon.png"
+I2P_HOME_URL = "http://legwork.i2p/"
+CLEARNET_HOME_URL = "https://i2pengine.com/"
+ROUTER_CONSOLE_URL = "http://127.0.0.1:7657/"
+I2P_PROXY_HOST = "127.0.0.1"
+I2P_PROXY_PORT = 4444
+TOR_PROXY_HOST = "127.0.0.1"
+TOR_PROXY_PORT = 9050
+DEFAULT_LANGUAGE = "en"
+
+
 def configure_qt_environment():
     pyqt_plugins = Path(PyQt5.__file__).resolve().parent / "Qt5" / "plugins"
     platform_plugins = pyqt_plugins / "platforms"
@@ -20,7 +32,15 @@ def configure_qt_environment():
         os.environ.setdefault("QT_QPA_PLATFORM", "cocoa")
 
 
+def configure_chromium_flags():
+    os.environ.setdefault(
+        "QTWEBENGINE_CHROMIUM_FLAGS",
+        f"--host-resolver-rules=MAP * ~NOTFOUND,EXCLUDE {I2P_PROXY_HOST}",
+    )
+
+
 configure_qt_environment()
+configure_chromium_flags()
 
 from PyQt5.QtCore import QByteArray, Qt, QUrl
 from PyQt5.QtGui import QIcon
@@ -43,17 +63,6 @@ from PyQt5.QtWidgets import (
     QToolBar,
 )
 
-
-APP_DIR = Path(__file__).resolve().parent
-APP_ICON = APP_DIR / "i2p_icon.png"
-I2P_HOME_URL = "http://legwork.i2p/"
-CLEARNET_HOME_URL = "https://i2pengine.com/"
-ROUTER_CONSOLE_URL = "http://127.0.0.1:7657/"
-I2P_PROXY_HOST = "127.0.0.1"
-I2P_PROXY_PORT = 4444
-TOR_PROXY_HOST = "127.0.0.1"
-TOR_PROXY_PORT = 9050
-DEFAULT_LANGUAGE = "en"
 
 TRANSLATIONS = {
     "en": {
@@ -137,7 +146,9 @@ class MainWindow(QMainWindow):
         self.profile = QWebEngineProfile(self)
         self.profile.setHttpCacheType(QWebEngineProfile.NoCache)
         self.profile.setPersistentCookiesPolicy(QWebEngineProfile.NoPersistentCookies)
-        self.profile.cookieStore().setCookieFilter(self._allow_first_party_cookies_only)
+        cookie_store = self.profile.cookieStore()
+        if hasattr(cookie_store, "setCookieFilter"):
+            cookie_store.setCookieFilter(self._allow_first_party_cookies_only)
 
         # Sets the custom profile for the browser
         self.browser.setPage(QWebEnginePage(self.profile, self.browser))
@@ -239,7 +250,11 @@ class MainWindow(QMainWindow):
 
         # Initialize the NWUrlRequestInterceptor with default headers
         self.request_interceptor = NWUrlRequestInterceptor(self.default_headers())
-        self.browser.page().profile().setUrlRequestInterceptor(self.request_interceptor)
+        profile = self.browser.page().profile()
+        if hasattr(profile, "setUrlRequestInterceptor"):
+            profile.setUrlRequestInterceptor(self.request_interceptor)
+        elif hasattr(profile, "installUrlRequestInterceptor"):
+            profile.installUrlRequestInterceptor(self.request_interceptor)
 
         # Enables I2P proxy initially and set the checkbox state
         self.i2p_proxy_switch.setChecked(True)
@@ -322,10 +337,9 @@ class MainWindow(QMainWindow):
             self.browser.setUrl(QUrl(CLEARNET_HOME_URL))
 
     def navigate_to_url(self):
-        url = self.url_bar.text()
-        if not url.startswith("http://") and not url.startswith("https://"):
-            url = "http://" + url  # Adds 'http://' prefix if missing
-        self.browser.setUrl(QUrl(url))
+        url = QUrl.fromUserInput(self.url_bar.text().strip())
+        if url.isValid() and not url.isEmpty():
+            self.browser.setUrl(url)
 
     def update_url(self, q):
         url = q.toString()
@@ -342,7 +356,6 @@ class MainWindow(QMainWindow):
             self.url_bar.setStyleSheet("color: red")
 
         self.url_bar.setText(url)
-
 
     def update_proxy_status(self):
         if self.proxy_mode == "i2p":
@@ -371,17 +384,20 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         # Clears browsing data when the application is closed
-        self.browser.page().history().clear()
-        self.browser.page().profile().clearAllVisitedLinks()
+        page = self.browser.page()
+        page.triggerAction(QWebEnginePage.Stop)
+        page.history().clear()
+
+        profile = page.profile()
+        if hasattr(profile, "clearAllVisitedLinks"):
+            profile.clearAllVisitedLinks()
+
+        self.browser.setPage(None)
+        page.deleteLater()
         event.accept()
 
 
 def main():
-    os.environ.setdefault(
-        "QTWEBENGINE_CHROMIUM_FLAGS",
-        f"--host-resolver-rules='MAP * ~NOTFOUND, EXCLUDE {I2P_PROXY_HOST}'",
-    )
-
     app = QApplication(sys.argv)
     QApplication.setApplicationName("I2P Browser")
     app.setWindowIcon(QIcon(str(APP_ICON)))
