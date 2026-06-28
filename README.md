@@ -2,7 +2,7 @@
 
 A lightweight PyQt browser for accessing I2P sites with privacy-focused defaults.
 
-## Description
+## 描述
 
 I2P, the Invisible Internet Project, is an anonymous network layer for private communication over the internet. I2P Browser is configured to access websites and services hosted inside the I2P network while keeping JavaScript, storage, and proxy behavior conservative by default.
 
@@ -11,8 +11,8 @@ I2P, the Invisible Internet Project, is an anonymous network layer for private c
 - JavaScript is enabled by default and can be toggled from the toolbar.
 - Browser storage, cache, and persistent cookies are disabled.
 - Third-party cookies are blocked.
-- I2P HTTP proxy mode is enabled by default at `127.0.0.1:4444`.
-- Optional Tor SOCKS5 proxy mode is available at `127.0.0.1:9050`.
+- I2P HTTP proxy mode is enabled by default at `127.0.0.1:4444`。
+- Optional Tor SOCKS5 proxy mode is available at `127.0.0.1:9050`。
 - I2P and Tor proxy modes are mutually exclusive.
 - The interface supports English, Simplified Chinese, and Traditional Chinese.
 - The browser clears history and visited links on exit.
@@ -23,7 +23,7 @@ I2P, the Invisible Internet Project, is an anonymous network layer for private c
 - [I2P Router](https://geti2p.net/en/download)
 - Optional: [Tor service](https://www.torproject.org/download/tor/) for Tor proxy mode
 
-## Installation
+## 安裝
 
 Clone the repository:
 
@@ -46,6 +46,7 @@ macOS:
 ```bash
 python3 -m pip install -r requirements.txt
 ```
+# Newest version may not support MacOS
 
 Debian/Ubuntu:
 
@@ -61,9 +62,9 @@ python3 -m pip install -r requirements.txt
 
 ## Usage
 
-Start the I2P router and make sure its HTTP proxy is available at `127.0.0.1:4444`.
+Start the I2P router and make sure its HTTP proxy is available at `127.0.0.1:4444`。
 
-To use Tor mode, start Tor and make sure its SOCKS5 proxy is available at `127.0.0.1:9050`.
+To use Tor mode, start Tor and make sure its SOCKS5 proxy is available at `127.0.0.1:9050`。
 
 Run the browser:
 
