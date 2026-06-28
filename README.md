@@ -43,10 +43,10 @@ Install Qt 6 WebEngine dependencies for your platform.
 
 macOS:
 
-```bash
+``bash
 python3 -m pip install -r requirements.txt
 ```
-# Newest version may not support MacOS
+Newest version may not support MacOS
 
 Debian/Ubuntu:
 
