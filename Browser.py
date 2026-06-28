@@ -75,13 +75,10 @@ TRANSLATIONS = {
     "en": {
         "language_name": "English",
         "window_title": "I2P Browser",
-        "back": "Back",
-        "forward": "Forward",
-        "reload": "Reload",
-        "home": "Home",
         "router_console": "I2P Router Console",
-        "use_i2p_proxy": "Use I2P Proxy",
-        "use_tor_proxy": "Use Tor Proxy",
+        "use_i2p_proxy": "I2P",
+        "use_tor_proxy": "Tor",
+        "javascript": "JS",
         "proxy_status_disabled": "Proxy Status: Disabled",
         "proxy_status_i2p": "Proxy Status: I2P {host}:{port}",
         "proxy_status_tor": "Proxy Status: Tor {host}:{port}",
@@ -91,13 +88,10 @@ TRANSLATIONS = {
     "zh_CN": {
         "language_name": "简体中文",
         "window_title": "I2P 浏览器",
-        "back": "后退",
-        "forward": "前进",
-        "reload": "刷新",
-        "home": "主页",
         "router_console": "I2P 路由控制台",
         "use_i2p_proxy": "使用 I2P 代理",
         "use_tor_proxy": "使用 Tor 代理",
+        "javascript": "脚本",
         "proxy_status_disabled": "代理状态：已关闭",
         "proxy_status_i2p": "代理状态：I2P {host}:{port}",
         "proxy_status_tor": "代理状态：Tor {host}:{port}",
@@ -107,13 +101,10 @@ TRANSLATIONS = {
     "zh_TW": {
         "language_name": "繁體中文",
         "window_title": "I2P 瀏覽器",
-        "back": "上一頁",
-        "forward": "下一頁",
-        "reload": "重新整理",
-        "home": "首頁",
         "router_console": "I2P 路由控制台",
         "use_i2p_proxy": "使用 I2P 代理",
         "use_tor_proxy": "使用 Tor 代理",
+        "javascript": "腳本",
         "proxy_status_disabled": "代理狀態：已關閉",
         "proxy_status_i2p": "代理狀態：I2P {host}:{port}",
         "proxy_status_tor": "代理狀態：Tor {host}:{port}",
@@ -143,7 +134,6 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.language = DEFAULT_LANGUAGE
-        self.actions = {}
         self.setWindowTitle(self.tr_text("window_title"))
 
         # Creates a QWebEngineView
@@ -160,9 +150,9 @@ class MainWindow(QMainWindow):
         # Sets the custom profile for the browser
         self.browser.setPage(QWebEnginePage(self.profile, self.browser))
 
-        # Disables JavaScript by default
+        # Enables JavaScript by default (togglable via toolbar switch)
         settings = self.browser.page().settings()
-        settings.setAttribute(QWebEngineSettings.JavascriptEnabled, False)
+        settings.setAttribute(QWebEngineSettings.JavascriptEnabled, True)
         settings.setAttribute(QWebEngineSettings.WebRTCPublicInterfacesOnly, True)  # Disable WebRTC
 
         # Disables local storage (caching)
@@ -187,31 +177,26 @@ class MainWindow(QMainWindow):
         self.addToolBar(navbar)
 
         # Adds navigation actions (Back, Forward, Reload, Home)
-        back_btn = QAction(self.tr_text("back"), self)
+        back_btn = QAction("◀", self)
         back_btn.triggered.connect(self.browser.back)
         navbar.addAction(back_btn)
-        self.actions["back"] = back_btn
 
-        forward_btn = QAction(self.tr_text("forward"), self)
+        forward_btn = QAction("▶", self)
         forward_btn.triggered.connect(self.browser.forward)
         navbar.addAction(forward_btn)
-        self.actions["forward"] = forward_btn
 
-        reload_btn = QAction(self.tr_text("reload"), self)
+        reload_btn = QAction("↻", self)
         reload_btn.triggered.connect(self.browser.reload)
         navbar.addAction(reload_btn)
-        self.actions["reload"] = reload_btn
 
-        home_btn = QAction(self.tr_text("home"), self)
+        home_btn = QAction("🏠", self)
         home_btn.triggered.connect(self.navigate_home)
         navbar.addAction(home_btn)
-        self.actions["home"] = home_btn
 
         # Button for I2P Router Console
-        custom_redirect_btn = QAction(QIcon(str(APP_ICON)), self.tr_text("router_console"), self)
-        custom_redirect_btn.triggered.connect(self.custom_redirect)
-        navbar.addAction(custom_redirect_btn)
-        self.actions["router_console"] = custom_redirect_btn
+        self.router_console_btn = QAction(QIcon(str(APP_ICON)), self.tr_text("router_console"), self)
+        self.router_console_btn.triggered.connect(self.custom_redirect)
+        navbar.addAction(self.router_console_btn)
 
         # Creates a URL input field
         self.url_bar = QLineEdit()
@@ -226,6 +211,10 @@ class MainWindow(QMainWindow):
         self.tor_proxy_switch = QCheckBox(self.tr_text("use_tor_proxy"), self)
         self.tor_proxy_switch.stateChanged.connect(self.toggle_tor_proxy)
         navbar.addWidget(self.tor_proxy_switch)
+
+        self.js_switch = QCheckBox(self.tr_text("javascript"), self)
+        self.js_switch.stateChanged.connect(self.toggle_javascript)
+        navbar.addWidget(self.js_switch)
 
         self.language_label = QLabel(self.tr_text("language"), self)
         navbar.addWidget(self.language_label)
@@ -266,6 +255,9 @@ class MainWindow(QMainWindow):
         # Enables I2P proxy initially and set the checkbox state
         self.i2p_proxy_switch.setChecked(True)
 
+        # Enables JavaScript switch by default
+        self.js_switch.setChecked(True)
+
         # Sets the initial URL to local home page
         self.browser.setUrl(QUrl(HOME_PAGE))
 
@@ -294,13 +286,16 @@ class MainWindow(QMainWindow):
 
     def apply_language(self):
         self.setWindowTitle(self.tr_text("window_title"))
-        for action_key, action in self.actions.items():
-            action.setText(self.tr_text(action_key))
-
+        self.router_console_btn.setText(self.tr_text("router_console"))
         self.i2p_proxy_switch.setText(self.tr_text("use_i2p_proxy"))
         self.tor_proxy_switch.setText(self.tr_text("use_tor_proxy"))
+        self.js_switch.setText(self.tr_text("javascript"))
         self.language_label.setText(self.tr_text("language"))
         self.update_proxy_status()
+
+    def toggle_javascript(self, state):
+        enabled = state == Qt.Checked
+        self.browser.page().settings().setAttribute(QWebEngineSettings.JavascriptEnabled, enabled)
 
     def toggle_i2p_proxy(self, state):
         if state == Qt.Checked:

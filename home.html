@@ -11,10 +11,31 @@
             box-sizing: border-box;
         }
 
+        :root {
+            color-scheme: dark;
+            --google-blue: #4285F4;
+            --google-red: #EA4335;
+            --google-yellow: #FBBC04;
+            --google-green: #34A853;
+            --bg: #101214;
+            --surface: #1B1F23;
+            --surface-2: #24292F;
+            --surface-3: #2F363D;
+            --text: #F1F3F4;
+            --muted: #BDC1C6;
+            --border: #3C4043;
+            --focus: rgba(66, 133, 244, 0.28);
+            --shadow: rgba(0, 0, 0, 0.38);
+        }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #F6F1E8;
-            color: #1F2421;
+            background:
+                radial-gradient(circle at 18% 8%, rgba(66, 133, 244, 0.18), transparent 28%),
+                radial-gradient(circle at 84% 16%, rgba(251, 188, 4, 0.13), transparent 24%),
+                radial-gradient(circle at 78% 88%, rgba(52, 168, 83, 0.12), transparent 28%),
+                var(--bg);
+            color: var(--text);
             min-height: 100vh;
             padding: 40px 20px;
         }
@@ -33,27 +54,28 @@
             font-family: 'DM Serif Display', 'Roboto Slab', serif;
             font-size: 3.5rem;
             font-weight: 700;
-            color: #2A2723;
+            color: var(--text);
             margin-bottom: 12px;
             letter-spacing: -0.02em;
         }
 
         h1 .accent {
-            color: #C8853F;
+            color: var(--google-blue);
             font-style: italic;
         }
 
         .subtitle {
             font-size: 1.1rem;
-            color: #8A8A80;
+            color: var(--muted);
             font-weight: 400;
         }
 
         .search-box {
-            background: #FFFFFF;
+            background: var(--surface);
             border-radius: 16px;
             padding: 20px;
-            box-shadow: 0 4px 20px rgba(42, 39, 35, 0.08);
+            border: 1px solid var(--border);
+            box-shadow: 0 12px 36px var(--shadow);
             margin-bottom: 50px;
         }
 
@@ -66,12 +88,12 @@
         .engine-select {
             padding: 16px 14px;
             font-size: 1rem;
-            border: 2px solid #E2D9C8;
+            border: 2px solid var(--border);
             border-radius: 12px;
             outline: none;
             font-family: 'Inter', sans-serif;
-            background: #F6F1E8;
-            color: #2A2723;
+            background: var(--surface-2);
+            color: var(--text);
             cursor: pointer;
             transition: all 0.2s;
             white-space: nowrap;
@@ -79,24 +101,26 @@
         }
 
         .engine-select:focus {
-            border-color: #C8853F;
-            box-shadow: 0 0 0 3px #F0E3D0;
+            border-color: var(--google-blue);
+            box-shadow: 0 0 0 3px var(--focus);
         }
 
         .search-input {
             flex: 1;
             padding: 16px 20px;
             font-size: 1.1rem;
-            border: 2px solid #E2D9C8;
+            border: 2px solid var(--border);
             border-radius: 12px;
             outline: none;
             font-family: 'Inter', sans-serif;
             transition: all 0.2s;
+            background: var(--surface-2);
+            color: var(--text);
         }
 
         .search-input:focus {
-            border-color: #C8853F;
-            box-shadow: 0 0 0 3px #F0E3D0;
+            border-color: var(--google-blue);
+            box-shadow: 0 0 0 3px var(--focus);
         }
 
         .bookmarks {
@@ -107,8 +131,8 @@
         }
 
         .bookmark-card {
-            background: #FBF7EF;
-            border: 2px solid #E2D9C8;
+            background: var(--surface);
+            border: 2px solid var(--border);
             border-radius: 12px;
             padding: 20px;
             cursor: pointer;
@@ -118,14 +142,14 @@
 
         .bookmark-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 6px 24px rgba(42, 39, 35, 0.12);
-            border-color: #C8853F;
+            box-shadow: 0 12px 30px var(--shadow);
+            border-color: var(--google-blue);
         }
 
         .bookmark-icon {
             width: 48px;
             height: 48px;
-            background: #F0E3D0;
+            background: linear-gradient(135deg, rgba(66, 133, 244, 0.22), rgba(52, 168, 83, 0.18));
             border-radius: 10px;
             display: flex;
             align-items: center;
@@ -137,20 +161,20 @@
         .bookmark-title {
             font-size: 1.1rem;
             font-weight: 600;
-            color: #2A2723;
+            color: var(--text);
             margin-bottom: 6px;
         }
 
         .bookmark-url {
             font-size: 0.9rem;
-            color: #8A8A80;
+            color: var(--muted);
             word-break: break-all;
         }
 
         .bookmark-tag {
             display: inline-block;
-            background: #F0E3D0;
-            color: #C8853F;
+            background: rgba(251, 188, 4, 0.16);
+            color: var(--google-yellow);
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 0.75rem;
@@ -165,7 +189,7 @@
             right: 16px;
             background: transparent;
             border: none;
-            color: #8A8A80;
+            color: var(--muted);
             cursor: pointer;
             font-size: 1.2rem;
             padding: 4px;
@@ -173,12 +197,12 @@
         }
 
         .delete-btn:hover {
-            color: #C8853F;
+            color: var(--google-red);
         }
 
         .add-bookmark {
-            background: #2A2723;
-            color: #F6F1E8;
+            background: var(--google-blue);
+            color: #FFFFFF;
             border: none;
             border-radius: 12px;
             padding: 16px 32px;
@@ -190,9 +214,9 @@
         }
 
         .add-bookmark:hover {
-            background: #C8853F;
+            background: #5A95F5;
             transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(200, 133, 63, 0.3);
+            box-shadow: 0 8px 22px rgba(66, 133, 244, 0.32);
         }
 
         .modal {
@@ -202,7 +226,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(31, 36, 33, 0.6);
+            background: rgba(16, 18, 20, 0.72);
             backdrop-filter: blur(4px);
             z-index: 1000;
             align-items: center;
@@ -214,12 +238,13 @@
         }
 
         .modal-content {
-            background: #FFFFFF;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 16px;
             padding: 32px;
             width: 90%;
             max-width: 500px;
-            box-shadow: 0 12px 48px rgba(42, 39, 35, 0.2);
+            box-shadow: 0 18px 52px rgba(0, 0, 0, 0.48);
         }
 
         .modal-title {
@@ -227,7 +252,7 @@
             font-size: 1.8rem;
             font-weight: 700;
             margin-bottom: 24px;
-            color: #2A2723;
+            color: var(--text);
         }
 
         .form-group {
@@ -238,23 +263,25 @@
             display: block;
             font-weight: 600;
             margin-bottom: 8px;
-            color: #2A2723;
+            color: var(--text);
         }
 
         .form-input {
             width: 100%;
             padding: 12px 16px;
-            border: 2px solid #E2D9C8;
+            border: 2px solid var(--border);
             border-radius: 8px;
             font-size: 1rem;
             font-family: 'Inter', sans-serif;
             outline: none;
             transition: all 0.2s;
+            background: var(--surface-2);
+            color: var(--text);
         }
 
         .form-input:focus {
-            border-color: #C8853F;
-            box-shadow: 0 0 0 3px #F0E3D0;
+            border-color: var(--google-blue);
+            box-shadow: 0 0 0 3px var(--focus);
         }
 
         .form-buttons {
@@ -275,22 +302,22 @@
         }
 
         .btn-primary {
-            background: #C8853F;
+            background: var(--google-green);
             color: #FFFFFF;
         }
 
         .btn-primary:hover {
-            background: #A86B2C;
+            background: #3CBD60;
             transform: translateY(-2px);
         }
 
         .btn-secondary {
-            background: #E2D9C8;
-            color: #2A2723;
+            background: var(--surface-3);
+            color: var(--text);
         }
 
         .btn-secondary:hover {
-            background: #D0C5B0;
+            background: #3C444C;
         }
 
         .tag-input-container {
@@ -298,22 +325,23 @@
             flex-wrap: wrap;
             gap: 8px;
             padding: 8px;
-            border: 2px solid #E2D9C8;
+            border: 2px solid var(--border);
             border-radius: 8px;
             min-height: 48px;
             align-items: center;
+            background: var(--surface-2);
         }
 
         .tag-input-container:focus-within {
-            border-color: #C8853F;
-            box-shadow: 0 0 0 3px #F0E3D0;
+            border-color: var(--google-blue);
+            box-shadow: 0 0 0 3px var(--focus);
         }
 
         .tag-item {
             display: inline-flex;
             align-items: center;
-            background: #F0E3D0;
-            color: #C8853F;
+            background: rgba(234, 67, 53, 0.16);
+            color: #F28B82;
             padding: 4px 8px 4px 12px;
             border-radius: 20px;
             font-size: 0.85rem;
@@ -323,7 +351,7 @@
         .tag-remove {
             background: none;
             border: none;
-            color: #C8853F;
+            color: #F28B82;
             cursor: pointer;
             margin-left: 6px;
             font-size: 1.1rem;
@@ -337,90 +365,8 @@
             min-width: 100px;
             padding: 4px;
             font-size: 0.9rem;
-        }
-
-        /* Dark mode */
-        @media (prefers-color-scheme: dark) {
-            body {
-                background: #1A1A1A;
-                color: #E8E3DA;
-            }
-            h1 { color: #E8E3DA; }
-            .search-box {
-                background: #252525;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            }
-            .engine-select {
-                background: #2E2E2E;
-                border-color: #3A3A3A;
-                color: #E8E3DA;
-            }
-            .engine-select:focus {
-                border-color: #C8853F;
-                box-shadow: 0 0 0 3px rgba(200, 133, 63, 0.2);
-            }
-            .search-input {
-                background: #2E2E2E;
-                border-color: #3A3A3A;
-                color: #E8E3DA;
-            }
-            .search-input:focus {
-                border-color: #C8853F;
-                box-shadow: 0 0 0 3px rgba(200, 133, 63, 0.2);
-            }
-            .bookmark-card {
-                background: #252525;
-                border-color: #3A3A3A;
-            }
-            .bookmark-card:hover {
-                box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
-            }
-            .bookmark-icon { background: #3A3A3A; }
-            .bookmark-title { color: #E8E3DA; }
-            .bookmark-tag {
-                background: #3A3A3A;
-                color: #C8853F;
-            }
-            .add-bookmark {
-                background: #C8853F;
-                color: #FFFFFF;
-            }
-            .add-bookmark:hover { background: #A86B2C; }
-            .modal-content {
-                background: #252525;
-                box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
-            }
-            .modal-title { color: #E8E3DA; }
-            .form-label { color: #E8E3DA; }
-            .form-input {
-                background: #2E2E2E;
-                border-color: #3A3A3A;
-                color: #E8E3DA;
-            }
-            .form-input:focus {
-                border-color: #C8853F;
-                box-shadow: 0 0 0 3px rgba(200, 133, 63, 0.2);
-            }
-            .tag-input-container {
-                background: #2E2E2E;
-                border-color: #3A3A3A;
-            }
-            .tag-input {
-                background: transparent;
-                color: #E8E3DA;
-            }
-            .tag-item {
-                background: #3A3A3A;
-                color: #C8853F;
-            }
-            .tag-remove { color: #C8853F; }
-            .btn-secondary {
-                background: #3A3A3A;
-                color: #E8E3DA;
-            }
-            .btn-secondary:hover { background: #4A4A4A; }
-            .delete-btn { color: #666; }
-            .delete-btn:hover { color: #C8853F; }
+            background: transparent;
+            color: var(--text);
         }
     </style>
 </head>
@@ -511,11 +457,29 @@
             return base + encodeURIComponent(query);
         }
 
+        function normalizeUrl(value) {
+            const trimmed = value.trim();
+            if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) {
+                return trimmed;
+            }
+            return 'http://' + trimmed;
+        }
+
+        function isProbablyUrl(value) {
+            return /^[a-z][a-z0-9+.-]*:/i.test(value) || value.includes('.') || value.includes(':');
+        }
+
         // load bookmarks from localStorage or set default bookmarks
         function loadBookmarks() {
             const saved = localStorage.getItem('i2p_bookmarks');
             if (saved) {
-                bookmarks = JSON.parse(saved);
+                try {
+                    const parsed = JSON.parse(saved);
+                    bookmarks = Array.isArray(parsed) ? parsed : [];
+                } catch (error) {
+                    bookmarks = [];
+                    localStorage.removeItem('i2p_bookmarks');
+                }
             } else {
                 // default bookmarks
                 bookmarks = [
@@ -539,7 +503,7 @@
             renderBookmarks();
         }
 
-        // Aave bookmarts to localStorage
+        // Save bookmarks to localStorage
         function saveBookmarks() {
             localStorage.setItem('i2p_bookmarks', JSON.stringify(bookmarks));
         }
@@ -547,16 +511,48 @@
         // Render bookmarks to the page
         function renderBookmarks() {
             const container = document.getElementById('bookmarks');
-            container.innerHTML = bookmarks.map(bookmark => `
-                <div class="bookmark-card" onclick="navigateTo('${bookmark.url}')">
-                    <button class="delete-btn" onclick="event.stopPropagation(); deleteBookmark(${bookmark.id})">×</button>
-                    <div class="bookmark-icon">${bookmark.icon || '🌐'}</div>
-                    <div class="bookmark-title">${bookmark.title}</div>
-                    <div class="bookmark-url">${bookmark.url}</div>
-                    ${bookmark.tags && bookmark.tags.length > 0 ?
-                        bookmark.tags.map(tag => `<span class="bookmark-tag">${tag}</span>`).join('') : ''}
-                </div>
-            `).join('');
+            container.innerHTML = '';
+
+            bookmarks.forEach(bookmark => {
+                const card = document.createElement('div');
+                card.className = 'bookmark-card';
+                card.addEventListener('click', () => navigateTo(bookmark.url));
+
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'delete-btn';
+                deleteButton.type = 'button';
+                deleteButton.textContent = 'x';
+                deleteButton.setAttribute('aria-label', `Delete ${bookmark.title}`);
+                deleteButton.addEventListener('click', event => {
+                    event.stopPropagation();
+                    deleteBookmark(bookmark.id);
+                });
+
+                const icon = document.createElement('div');
+                icon.className = 'bookmark-icon';
+                icon.textContent = bookmark.icon || '🌐';
+
+                const title = document.createElement('div');
+                title.className = 'bookmark-title';
+                title.textContent = bookmark.title;
+
+                const url = document.createElement('div');
+                url.className = 'bookmark-url';
+                url.textContent = bookmark.url;
+
+                card.append(deleteButton, icon, title, url);
+
+                if (Array.isArray(bookmark.tags)) {
+                    bookmark.tags.forEach(tag => {
+                        const tagElement = document.createElement('span');
+                        tagElement.className = 'bookmark-tag';
+                        tagElement.textContent = tag;
+                        card.appendChild(tagElement);
+                    });
+                }
+
+                container.appendChild(card);
+            });
         }
 
         // Navigate to a given URL
@@ -602,12 +598,22 @@
         function renderTags() {
             const container = document.getElementById('tagContainer');
             const input = document.getElementById('tagInput');
-            container.innerHTML = currentTags.map(tag => `
-                <span class="tag-item">
-                    ${tag}
-                    <button type="button" class="tag-remove" onclick="removeTag('${tag}')">×</button>
-                </span>
-            `).join('');
+            container.innerHTML = '';
+            currentTags.forEach(tag => {
+                const tagElement = document.createElement('span');
+                tagElement.className = 'tag-item';
+                tagElement.textContent = tag;
+
+                const removeButton = document.createElement('button');
+                removeButton.type = 'button';
+                removeButton.className = 'tag-remove';
+                removeButton.textContent = 'x';
+                removeButton.setAttribute('aria-label', `Remove ${tag}`);
+                removeButton.addEventListener('click', () => removeTag(tag));
+
+                tagElement.appendChild(removeButton);
+                container.appendChild(tagElement);
+            });
             container.appendChild(input);
         }
 
@@ -622,7 +628,7 @@
             e.preventDefault();
 
             const title = document.getElementById('titleInput').value.trim();
-            const url = document.getElementById('urlInput').value.trim();
+            const url = normalizeUrl(document.getElementById('urlInput').value);
             const icon = document.getElementById('iconInput').value.trim() || '🌐';
 
             bookmarks.push({
@@ -640,14 +646,13 @@
         });
 
         // Search input handler
-        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        document.getElementById('searchInput').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 const input = this.value.trim();
                 if (input) {
                     // If it looks like a URL, navigate directly
-                    if (input.includes('.') || input.startsWith('http')) {
-                        const url = input.startsWith('http') ? input : 'http://' + input;
-                        navigateTo(url);
+                    if (isProbablyUrl(input)) {
+                        navigateTo(normalizeUrl(input));
                     } else {
                         navigateTo(getSearchUrl(input));
                     }
