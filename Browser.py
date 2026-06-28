@@ -1,4 +1,8 @@
-
+# Created by umutcamliyurt
+# umutcamliyurtuks@protonmail.com
+# Optimized by: AnonUsAl
+# Albusp486@gmail.com
+# This is a simple I2P Browser built using PyQt6 and QWebEngineView. It allows users to browse the I2P network, Tor network, and clearnet with options to toggle JavaScript and switch between different proxy modes. The browser also supports multiple languages and provides a local home page for quick access.
 
 import os
 import sys
