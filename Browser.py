@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from urllib.parse import urlsplit
 
-import PyQt5
+import PyQt6
 
 
 APP_DIR = Path(__file__).resolve().parent
@@ -21,12 +21,12 @@ TOR_PROXY_PORT = 9050
 DEFAULT_LANGUAGE = "en"
 
 # for macOS, set the QT_QPA_PLATFORM_PLUGIN_PATH and QT_PLUGIN_PATH environment variables.
-#macOS requires these environment variables to be set for PyQt5 to find the necessary Qt plugins. This is especially important when running the application outside of a standard Python environment, such as when packaged with PyInstaller or similar tools.
+#macOS requires these environment variables to be set for PyQt6 to find the necessary Qt plugins. This is especially important when running the application outside of a standard Python environment, such as when packaged with PyInstaller or similar tools.
 #fuck macOS
 #It takes me a lot of time to figure out this problem, and I hope this code can help others who encounter the same issue.   
 #fuck macOS again!!!!!!!!!
 def configure_qt_environment():
-    pyqt_plugins = Path(PyQt5.__file__).resolve().parent / "Qt5" / "plugins"
+    pyqt_plugins = Path(PyQt6.__file__).resolve().parent / "Qt6" / "plugins"
     platform_plugins = pyqt_plugins / "platforms"
 
     if platform_plugins.exists():
@@ -48,19 +48,18 @@ def configure_chromium_flags():
 configure_qt_environment()
 configure_chromium_flags()
 
-from PyQt5.QtCore import QByteArray, Qt, QUrl
-from PyQt5.QtGui import QIcon
-from PyQt5.QtNetwork import QNetworkProxy
-from PyQt5.QtWebEngineCore import QWebEngineUrlRequestInterceptor
-from PyQt5.QtWebEngineWidgets import (
+from PyQt6.QtCore import QByteArray, Qt, QUrl
+from PyQt6.QtGui import QAction, QIcon
+from PyQt6.QtNetwork import QNetworkProxy
+from PyQt6.QtWebEngineCore import QWebEngineUrlRequestInterceptor
+from PyQt6.QtWebEngineWidgets import (
     QWebEnginePage,
     QWebEngineProfile,
     QWebEngineSettings,
     QWebEngineView,
 
 )
-from PyQt5.QtWidgets import (
-    QAction,
+from PyQt6.QtWidgets import (
     QApplication,
     QCheckBox,
     QComboBox,
@@ -141,8 +140,10 @@ class MainWindow(QMainWindow):
 
         # Creates an off-the-record custom profile.
         self.profile = QWebEngineProfile(self)
-        self.profile.setHttpCacheType(QWebEngineProfile.NoCache)
-        self.profile.setPersistentCookiesPolicy(QWebEngineProfile.NoPersistentCookies)
+        self.profile.setHttpCacheType(QWebEngineProfile.HttpCacheType.NoCache)
+        self.profile.setPersistentCookiesPolicy(
+            QWebEngineProfile.PersistentCookiesPolicy.NoPersistentCookies
+        )
         cookie_store = self.profile.cookieStore()
         if hasattr(cookie_store, "setCookieFilter"):
             cookie_store.setCookieFilter(self._allow_first_party_cookies_only)
@@ -152,15 +153,24 @@ class MainWindow(QMainWindow):
 
         # Enables JavaScript by default (togglable via toolbar switch)
         settings = self.browser.page().settings()
-        settings.setAttribute(QWebEngineSettings.JavascriptEnabled, True)
-        settings.setAttribute(QWebEngineSettings.WebRTCPublicInterfacesOnly, True)  # Disable WebRTC
+        settings.setAttribute(QWebEngineSettings.WebAttribute.JavascriptEnabled, True)
+        settings.setAttribute(
+            QWebEngineSettings.WebAttribute.WebRTCPublicInterfacesOnly,
+            True,
+        )
 
         # Disables local storage (caching)
-        settings.setAttribute(QWebEngineSettings.LocalStorageEnabled, False)
+        settings.setAttribute(QWebEngineSettings.WebAttribute.LocalStorageEnabled, False)
 
         # Disables file access
-        settings.setAttribute(QWebEngineSettings.LocalContentCanAccessFileUrls, False)
-        settings.setAttribute(QWebEngineSettings.LocalContentCanAccessRemoteUrls, False)
+        settings.setAttribute(
+            QWebEngineSettings.WebAttribute.LocalContentCanAccessFileUrls,
+            False,
+        )
+        settings.setAttribute(
+            QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls,
+            False,
+        )
 
         # Sets custom User-Agent string
         user_agent = "Mozilla/5.0 (Windows NT 10.0; rv:102.0) Gecko/20100101 Firefox/102.0"
@@ -235,12 +245,12 @@ class MainWindow(QMainWindow):
         # Sets up proxies. I2P is enabled by default.
         self.proxy_mode = "none"
         self.i2p_proxy = QNetworkProxy()
-        self.i2p_proxy.setType(QNetworkProxy.HttpProxy)
+        self.i2p_proxy.setType(QNetworkProxy.ProxyType.HttpProxy)
         self.i2p_proxy.setHostName(I2P_PROXY_HOST)
         self.i2p_proxy.setPort(I2P_PROXY_PORT)
 
         self.tor_proxy = QNetworkProxy()
-        self.tor_proxy.setType(QNetworkProxy.Socks5Proxy)
+        self.tor_proxy.setType(QNetworkProxy.ProxyType.Socks5Proxy)
         self.tor_proxy.setHostName(TOR_PROXY_HOST)
         self.tor_proxy.setPort(TOR_PROXY_PORT)
 
@@ -263,7 +273,10 @@ class MainWindow(QMainWindow):
 
     @staticmethod
     def _allow_first_party_cookies_only(request):
-        return not request.thirdParty
+        third_party = request.thirdParty
+        if callable(third_party):
+            third_party = third_party()
+        return not third_party
 
     def tr_text(self, key):
         return TRANSLATIONS[self.language][key]
@@ -294,17 +307,20 @@ class MainWindow(QMainWindow):
         self.update_proxy_status()
 
     def toggle_javascript(self, state):
-        enabled = state == Qt.Checked
-        self.browser.page().settings().setAttribute(QWebEngineSettings.JavascriptEnabled, enabled)
+        enabled = state == Qt.CheckState.Checked.value
+        self.browser.page().settings().setAttribute(
+            QWebEngineSettings.WebAttribute.JavascriptEnabled,
+            enabled,
+        )
 
     def toggle_i2p_proxy(self, state):
-        if state == Qt.Checked:
+        if state == Qt.CheckState.Checked.value:
             self._set_proxy_mode("i2p")
         else:
             self._set_proxy_mode("none")
 
     def toggle_tor_proxy(self, state):
-        if state == Qt.Checked:
+        if state == Qt.CheckState.Checked.value:
             self._set_proxy_mode("tor")
         else:
             self._set_proxy_mode("none")
@@ -383,7 +399,7 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         # Clears browsing data when the application is closed
         page = self.browser.page()
-        page.triggerAction(QWebEnginePage.Stop)
+        page.triggerAction(QWebEnginePage.WebAction.Stop)
         page.history().clear()
 
         profile = page.profile()
@@ -403,10 +419,9 @@ def main():
     window = MainWindow()
     window.showMaximized()
 
-    return app.exec_()
+    return app.exec()
 
 
 if __name__ == "__main__":
     sys.exit(main())
     
-

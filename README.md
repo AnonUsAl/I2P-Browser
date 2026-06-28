@@ -8,7 +8,7 @@ I2P, the Invisible Internet Project, is an anonymous network layer for private c
 
 ## Features
 
-- JavaScript is disabled by default.
+- JavaScript is enabled by default and can be toggled from the toolbar.
 - Browser storage, cache, and persistent cookies are disabled.
 - Third-party cookies are blocked.
 - I2P HTTP proxy mode is enabled by default at `127.0.0.1:4444`.
@@ -39,18 +39,18 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Install Qt WebEngine dependencies for your platform.
+Install Qt 6 WebEngine dependencies for your platform.
 
 macOS:
 
 ```bash
-brew install python3-pyqt5.qtwebengine
+python3 -m pip install -r requirements.txt
 ```
 
 Debian/Ubuntu:
 
 ```bash
-sudo apt-get install python3-pyqt5.qtwebengine
+sudo apt-get install libnss3 libxcomposite1 libxdamage1 libxrandr2 libxtst6 libxkbcommon-x11-0
 ```
 
 Install Python dependencies:
