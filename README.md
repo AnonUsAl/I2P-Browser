@@ -1,8 +1,8 @@
-# I2P Browser
+# Allium browser
 
 A lightweight PyQt browser for accessing I2P sites with privacy-focused defaults.
 
-## 描述
+## Describe
 
 I2P, the Invisible Internet Project, is an anonymous network layer for private communication over the internet. I2P Browser is configured to access websites and services hosted inside the I2P network while keeping JavaScript, storage, and proxy behavior conservative by default.
 
@@ -23,7 +23,7 @@ I2P, the Invisible Internet Project, is an anonymous network layer for private c
 - [I2P Router](https://geti2p.net/en/download)
 - Optional: [Tor service](https://www.torproject.org/download/tor/) for Tor proxy mode
 
-## 安裝
+## Install
 
 Clone the repository:
 
