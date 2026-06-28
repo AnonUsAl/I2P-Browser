@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I2P Browser Home</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #F6F1E8;
+            color: #1F2421;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        h1 {
+            font-family: 'DM Serif Display', 'Roboto Slab', serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #2A2723;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+
+        h1 .accent {
+            color: #C8853F;
+            font-style: italic;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #8A8A80;
+            font-weight: 400;
+        }
+
+        .search-box {
+            background: #FFFFFF;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(42, 39, 35, 0.08);
+            margin-bottom: 50px;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .engine-select {
+            padding: 16px 14px;
+            font-size: 1rem;
+            border: 2px solid #E2D9C8;
+            border-radius: 12px;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+            background: #F6F1E8;
+            color: #2A2723;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .engine-select:focus {
+            border-color: #C8853F;
+            box-shadow: 0 0 0 3px #F0E3D0;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 16px 20px;
+            font-size: 1.1rem;
+            border: 2px solid #E2D9C8;
+            border-radius: 12px;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: #C8853F;
+            box-shadow: 0 0 0 3px #F0E3D0;
+        }
+
+        .bookmarks {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .bookmark-card {
+            background: #FBF7EF;
+            border: 2px solid #E2D9C8;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .bookmark-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 24px rgba(42, 39, 35, 0.12);
+            border-color: #C8853F;
+        }
+
+        .bookmark-icon {
+            width: 48px;
+            height: 48px;
+            background: #F0E3D0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+        }
+
+        .bookmark-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2A2723;
+            margin-bottom: 6px;
+        }
+
+        .bookmark-url {
+            font-size: 0.9rem;
+            color: #8A8A80;
+            word-break: break-all;
+        }
+
+        .bookmark-tag {
+            display: inline-block;
+            background: #F0E3D0;
+            color: #C8853F;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 10px;
+            margin-right: 6px;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: transparent;
+            border: none;
+            color: #8A8A80;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+
+        .delete-btn:hover {
+            color: #C8853F;
+        }
+
+        .add-bookmark {
+            background: #2A2723;
+            color: #F6F1E8;
+            border: none;
+            border-radius: 12px;
+            padding: 16px 32px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 30px;
+        }
+
+        .add-bookmark:hover {
+            background: #C8853F;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(200, 133, 63, 0.3);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(31, 36, 33, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #FFFFFF;
+            border-radius: 16px;
+            padding: 32px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 12px 48px rgba(42, 39, 35, 0.2);
+        }
+
+        .modal-title {
+            font-family: 'Roboto Slab', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: #2A2723;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2A2723;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #E2D9C8;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: #C8853F;
+            box-shadow: 0 0 0 3px #F0E3D0;
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 28px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #C8853F;
+            color: #FFFFFF;
+        }
+
+        .btn-primary:hover {
+            background: #A86B2C;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #E2D9C8;
+            color: #2A2723;
+        }
+
+        .btn-secondary:hover {
+            background: #D0C5B0;
+        }
+
+        .tag-input-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 8px;
+            border: 2px solid #E2D9C8;
+            border-radius: 8px;
+            min-height: 48px;
+            align-items: center;
+        }
+
+        .tag-input-container:focus-within {
+            border-color: #C8853F;
+            box-shadow: 0 0 0 3px #F0E3D0;
+        }
+
+        .tag-item {
+            display: inline-flex;
+            align-items: center;
+            background: #F0E3D0;
+            color: #C8853F;
+            padding: 4px 8px 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .tag-remove {
+            background: none;
+            border: none;
+            color: #C8853F;
+            cursor: pointer;
+            margin-left: 6px;
+            font-size: 1.1rem;
+            padding: 0 4px;
+        }
+
+        .tag-input {
+            border: none;
+            outline: none;
+            flex: 1;
+            min-width: 100px;
+            padding: 4px;
+            font-size: 0.9rem;
+        }
+
+        /* Dark mode */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #1A1A1A;
+                color: #E8E3DA;
+            }
+            h1 { color: #E8E3DA; }
+            .search-box {
+                background: #252525;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            }
+            .engine-select {
+                background: #2E2E2E;
+                border-color: #3A3A3A;
+                color: #E8E3DA;
+            }
+            .engine-select:focus {
+                border-color: #C8853F;
+                box-shadow: 0 0 0 3px rgba(200, 133, 63, 0.2);
+            }
+            .search-input {
+                background: #2E2E2E;
+                border-color: #3A3A3A;
+                color: #E8E3DA;
+            }
+            .search-input:focus {
+                border-color: #C8853F;
+                box-shadow: 0 0 0 3px rgba(200, 133, 63, 0.2);
+            }
+            .bookmark-card {
+                background: #252525;
+                border-color: #3A3A3A;
+            }
+            .bookmark-card:hover {
+                box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+            }
+            .bookmark-icon { background: #3A3A3A; }
+            .bookmark-title { color: #E8E3DA; }
+            .bookmark-tag {
+                background: #3A3A3A;
+                color: #C8853F;
+            }
+            .add-bookmark {
+                background: #C8853F;
+                color: #FFFFFF;
+            }
+            .add-bookmark:hover { background: #A86B2C; }
+            .modal-content {
+                background: #252525;
+                box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+            }
+            .modal-title { color: #E8E3DA; }
+            .form-label { color: #E8E3DA; }
+            .form-input {
+                background: #2E2E2E;
+                border-color: #3A3A3A;
+                color: #E8E3DA;
+            }
+            .form-input:focus {
+                border-color: #C8853F;
+                box-shadow: 0 0 0 3px rgba(200, 133, 63, 0.2);
+            }
+            .tag-input-container {
+                background: #2E2E2E;
+                border-color: #3A3A3A;
+            }
+            .tag-input {
+                background: transparent;
+                color: #E8E3DA;
+            }
+            .tag-item {
+                background: #3A3A3A;
+                color: #C8853F;
+            }
+            .tag-remove { color: #C8853F; }
+            .btn-secondary {
+                background: #3A3A3A;
+                color: #E8E3DA;
+            }
+            .btn-secondary:hover { background: #4A4A4A; }
+            .delete-btn { color: #666; }
+            .delete-btn:hover { color: #C8853F; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>I2P <span class="accent">Browser</span></h1>
+            <p class="subtitle">Secure, Private, Anonymous Browsing</p>
+        </header>
+
+        <div class="search-box">
+            <div class="search-row">
+                <select class="engine-select" id="engineSelect"></select>
+                <input
+                    type="text"
+                    class="search-input"
+                    id="searchInput"
+                    placeholder="Enter URL or search..."
+                    autofocus
+                >
+            </div>
+        </div>
+
+        <button class="add-bookmark" onclick="openModal()">+ Add Bookmark</button>
+
+        <div class="bookmarks" id="bookmarks"></div>
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">Add Bookmark</h2>
+            <form id="bookmarkForm">
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-input" id="titleInput" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">URL</label>
+                    <input type="text" class="form-input" id="urlInput" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Icon(emoji)</label>
+                    <input type="text" class="form-input" id="iconInput" placeholder="🌐" maxlength="2">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tags (Press Enter to Add)</label>
+                    <div class="tag-input-container" id="tagContainer">
+                        <input type="text" class="tag-input" id="tagInput" placeholder="Enter tags...">
+                    </div>
+                </div>
+                <div class="form-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const SEARCH_ENGINES = [
+            { name: 'Ransack (I2P)',  url: 'http://ransack.i2p/?q=',            i2p: true  },
+            { name: 'Search (I2P)',   url: 'http://search.i2p/?q=',             i2p: true  },
+            { name: 'DuckDuckGo',     url: 'https://duckduckgo.com/?q=',        i2p: false },
+            { name: 'Brave Search',   url: 'https://search.brave.com/search?q=',i2p: false },
+            { name: 'SearXNG',        url: 'https://searx.be/search?q=',        i2p: false },
+        ];
+
+        let bookmarks = [];
+        let currentTags = [];
+
+        function loadEngineSelect() {
+            const select = document.getElementById('engineSelect');
+            const saved = localStorage.getItem('i2p_search_engine') || SEARCH_ENGINES[0].url;
+            SEARCH_ENGINES.forEach(engine => {
+                const opt = document.createElement('option');
+                opt.value = engine.url;
+                opt.textContent = engine.name;
+                if (engine.url === saved) opt.selected = true;
+                select.appendChild(opt);
+            });
+            select.addEventListener('change', function() {
+                localStorage.setItem('i2p_search_engine', this.value);
+            });
+        }
+
+        function getSearchUrl(query) {
+            const base = document.getElementById('engineSelect').value;
+            return base + encodeURIComponent(query);
+        }
+
+        // load bookmarks from localStorage or set default bookmarks
+        function loadBookmarks() {
+            const saved = localStorage.getItem('i2p_bookmarks');
+            if (saved) {
+                bookmarks = JSON.parse(saved);
+            } else {
+                // default bookmarks
+                bookmarks = [
+                    {
+                        id: Date.now(),
+                        title: 'I2P Router Console',
+                        url: 'http://127.0.0.1:7657/',
+                        icon: '⚙️',
+                        tags: ['System', 'Router']
+                    },
+                    {
+                        id: Date.now() + 1,
+                        title: 'Ransack I2P',
+                        url: 'http://ransack.i2p/',
+                        icon: '🔍',
+                        tags: ['Search']
+                    }
+                ];
+                saveBookmarks();
+            }
+            renderBookmarks();
+        }
+
+        // Aave bookmarts to localStorage
+        function saveBookmarks() {
+            localStorage.setItem('i2p_bookmarks', JSON.stringify(bookmarks));
+        }
+
+        // Render bookmarks to the page
+        function renderBookmarks() {
+            const container = document.getElementById('bookmarks');
+            container.innerHTML = bookmarks.map(bookmark => `
+                <div class="bookmark-card" onclick="navigateTo('${bookmark.url}')">
+                    <button class="delete-btn" onclick="event.stopPropagation(); deleteBookmark(${bookmark.id})">×</button>
+                    <div class="bookmark-icon">${bookmark.icon || '🌐'}</div>
+                    <div class="bookmark-title">${bookmark.title}</div>
+                    <div class="bookmark-url">${bookmark.url}</div>
+                    ${bookmark.tags && bookmark.tags.length > 0 ?
+                        bookmark.tags.map(tag => `<span class="bookmark-tag">${tag}</span>`).join('') : ''}
+                </div>
+            `).join('');
+        }
+
+        // Navigate to a given URL
+        function navigateTo(url) {
+            window.location.href = url;
+        }
+
+        // Delete a bookmark by ID
+        function deleteBookmark(id) {
+            bookmarks = bookmarks.filter(b => b.id !== id);
+            saveBookmarks();
+            renderBookmarks();
+        }
+
+        // Open modal
+        function openModal() {
+            document.getElementById('modal').classList.add('active');
+            document.getElementById('titleInput').focus();
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            document.getElementById('bookmarkForm').reset();
+            currentTags = [];
+            renderTags();
+        }
+
+        // Tag input handler
+        document.getElementById('tagInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const tag = this.value.trim();
+                if (tag && !currentTags.includes(tag)) {
+                    currentTags.push(tag);
+                    renderTags();
+                    this.value = '';
+                }
+            }
+        });
+
+        // Render tags
+        function renderTags() {
+            const container = document.getElementById('tagContainer');
+            const input = document.getElementById('tagInput');
+            container.innerHTML = currentTags.map(tag => `
+                <span class="tag-item">
+                    ${tag}
+                    <button type="button" class="tag-remove" onclick="removeTag('${tag}')">×</button>
+                </span>
+            `).join('');
+            container.appendChild(input);
+        }
+
+        // Remove tag
+        function removeTag(tag) {
+            currentTags = currentTags.filter(t => t !== tag);
+            renderTags();
+        }
+
+        // Submit form
+        document.getElementById('bookmarkForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const title = document.getElementById('titleInput').value.trim();
+            const url = document.getElementById('urlInput').value.trim();
+            const icon = document.getElementById('iconInput').value.trim() || '🌐';
+
+            bookmarks.push({
+                id: Date.now(),
+                title,
+                url,
+                icon,
+                tags: [...currentTags]
+            });
+
+            saveBookmarks();
+            renderBookmarks();
+            closeModal();
+            currentTags = [];
+        });
+
+        // Search input handler
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const input = this.value.trim();
+                if (input) {
+                    // If it looks like a URL, navigate directly
+                    if (input.includes('.') || input.startsWith('http')) {
+                        const url = input.startsWith('http') ? input : 'http://' + input;
+                        navigateTo(url);
+                    } else {
+                        navigateTo(getSearchUrl(input));
+                    }
+                }
+            }
+        });
+
+        // Close modal on outside click
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Initialize
+        loadEngineSelect();
+        loadBookmarks();
+    </script>
+</body>
+</html>

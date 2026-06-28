@@ -1,3 +1,5 @@
+
+
 import os
 import sys
 from pathlib import Path
@@ -8,8 +10,9 @@ import PyQt5
 
 APP_DIR = Path(__file__).resolve().parent
 APP_ICON = APP_DIR / "i2p_icon.png"
-I2P_HOME_URL = "http://legwork.i2p/"
-CLEARNET_HOME_URL = "https://i2pengine.com/"
+HOME_PAGE = (APP_DIR / "home.html").as_uri()
+I2P_HOME_URL = "http://ransack.i2p/"
+CLEARNET_HOME_URL = "https://duckduckgo.com"
 ROUTER_CONSOLE_URL = "http://127.0.0.1:7657/"
 I2P_PROXY_HOST = "127.0.0.1"
 I2P_PROXY_PORT = 4444
@@ -17,7 +20,11 @@ TOR_PROXY_HOST = "127.0.0.1"
 TOR_PROXY_PORT = 9050
 DEFAULT_LANGUAGE = "en"
 
-
+# for macOS, set the QT_QPA_PLATFORM_PLUGIN_PATH and QT_PLUGIN_PATH environment variables.
+#macOS requires these environment variables to be set for PyQt5 to find the necessary Qt plugins. This is especially important when running the application outside of a standard Python environment, such as when packaged with PyInstaller or similar tools.
+#fuck macOS
+#It takes me a lot of time to figure out this problem, and I hope this code can help others who encounter the same issue.   
+#fuck macOS again!!!!!!!!!
 def configure_qt_environment():
     pyqt_plugins = Path(PyQt5.__file__).resolve().parent / "Qt5" / "plugins"
     platform_plugins = pyqt_plugins / "platforms"
@@ -33,10 +40,9 @@ def configure_qt_environment():
 
 
 def configure_chromium_flags():
-    os.environ.setdefault(
-        "QTWEBENGINE_CHROMIUM_FLAGS",
-        f"--host-resolver-rules=MAP * ~NOTFOUND,EXCLUDE {I2P_PROXY_HOST}",
-    )
+    # Disable GPU and sandbox on macOS to prevent crashes
+    flags = "--disable-gpu --no-sandbox --disable-features=NetworkPrediction"
+    os.environ.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", flags)
 
 
 configure_qt_environment()
@@ -51,6 +57,7 @@ from PyQt5.QtWebEngineWidgets import (
     QWebEngineProfile,
     QWebEngineSettings,
     QWebEngineView,
+
 )
 from PyQt5.QtWidgets import (
     QAction,
@@ -259,8 +266,8 @@ class MainWindow(QMainWindow):
         # Enables I2P proxy initially and set the checkbox state
         self.i2p_proxy_switch.setChecked(True)
 
-        # Sets the initial URL
-        self.browser.setUrl(QUrl(I2P_HOME_URL))
+        # Sets the initial URL to local home page
+        self.browser.setUrl(QUrl(HOME_PAGE))
 
     @staticmethod
     def _allow_first_party_cookies_only(request):
@@ -329,12 +336,8 @@ class MainWindow(QMainWindow):
         self.tor_proxy_switch.blockSignals(False)
 
     def navigate_home(self):
-        if self.proxy_mode == "i2p":
-            # If the checkbox is checked, use the Legwork I2P URL
-            self.browser.setUrl(QUrl(I2P_HOME_URL))
-        else:
-            # If the checkbox is unchecked, use the clearnet URL
-            self.browser.setUrl(QUrl(CLEARNET_HOME_URL))
+        # Always load the local home page
+        self.browser.setUrl(QUrl(HOME_PAGE))
 
     def navigate_to_url(self):
         url = QUrl.fromUserInput(self.url_bar.text().strip())
@@ -410,3 +413,5 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+    
+
