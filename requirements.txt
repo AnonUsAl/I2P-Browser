@@ -1,3 +1,4 @@
-PyQt6>=6.7
-PyQt6-WebEngine>=6.7
-pytest
+PyQt6>=6.7,<6.12
+PyQt6-Qt6>=6.7,<6.12
+PyQt6-WebEngine>=6.7,<6.12
+PyQt6-WebEngine-Qt6>=6.7,<6.12

@@ -43,10 +43,17 @@ Install Qt 6 WebEngine dependencies for your platform.
 
 macOS:
 
-``bash
+```bash
 python3 -m pip install -r requirements.txt
 ```
-Newest version may not support MacOS
+
+If you use Anaconda and see an error like `Library not loaded: @rpath/QtQuick.framework`, reinstall the PyQt wheels together so the base Qt frameworks and WebEngine frameworks match:
+
+```bash
+/opt/anaconda3/bin/python -m pip install --upgrade --force-reinstall -r requirements.txt
+```
+
+Newest versions may not support macOS immediately. If installation fails, use a fresh virtual environment with a Python version supported by the current PyQt6 wheels.
 
 Debian/Ubuntu:
 

@@ -1,13 +1,27 @@
 # Created by umutcamliyurt
 # umutcamliyurtuks@protonmail.com
 # Optimized by: AnonUsAl
-# Albusp486@gmail.com
+# Albusp486@proton.me
 # This is a simple I2P Browser built using PyQt6 and QWebEngineView. It allows users to browse the I2P network, Tor network, and clearnet with options to toggle JavaScript and switch between different proxy modes. The browser also supports multiple languages and provides a local home page for quick access.
 
 import os
 import sys
 from pathlib import Path
 from urllib.parse import urlsplit
+
+# Auto-switch to .venv Python if the current env is missing QtQuick (e.g. Anaconda)
+def _ensure_correct_python():
+    try:
+        import PyQt6
+        qt_lib = Path(PyQt6.__file__).resolve().parent / "Qt6" / "lib"
+        if not (qt_lib / "QtQuick.framework").exists():
+            venv_python = Path(__file__).resolve().parent / ".venv" / "bin" / "python"
+            if venv_python.exists():
+                os.execv(str(venv_python), [str(venv_python)] + sys.argv)
+    except ImportError:
+        pass
+
+_ensure_correct_python()
 
 import PyQt6
 
@@ -29,18 +43,21 @@ DEFAULT_LANGUAGE = "en"
 #fuck macOS
 #It takes me a lot of time to figure out this problem, and I hope this code can help others who encounter the same issue.   
 #fuck macOS again!!!!!!!!!
+#It doesn' work after I changed the platform from PyQt5 to Pyqt6 on MacOS
+
 def configure_qt_environment():
     pyqt_plugins = Path(PyQt6.__file__).resolve().parent / "Qt6" / "plugins"
     platform_plugins = pyqt_plugins / "platforms"
 
+    # Use direct assignment to override any stale values inherited from parent env
     if platform_plugins.exists():
-        os.environ.setdefault("QT_QPA_PLATFORM_PLUGIN_PATH", str(platform_plugins))
+        os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = str(platform_plugins)
 
     if pyqt_plugins.exists():
-        os.environ.setdefault("QT_PLUGIN_PATH", str(pyqt_plugins))
+        os.environ["QT_PLUGIN_PATH"] = str(pyqt_plugins)
 
     if sys.platform == "darwin":
-        os.environ.setdefault("QT_QPA_PLATFORM", "cocoa")
+        os.environ["QT_QPA_PLATFORM"] = "cocoa"
 
 
 def configure_chromium_flags():
@@ -55,14 +72,13 @@ configure_chromium_flags()
 from PyQt6.QtCore import QByteArray, Qt, QUrl
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtNetwork import QNetworkProxy
-from PyQt6.QtWebEngineCore import QWebEngineUrlRequestInterceptor
-from PyQt6.QtWebEngineWidgets import (
+from PyQt6.QtWebEngineCore import (
+    QWebEngineUrlRequestInterceptor,
     QWebEnginePage,
     QWebEngineProfile,
     QWebEngineSettings,
-    QWebEngineView,
-
 )
+from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWidgets import (
     QApplication,
     QCheckBox,
